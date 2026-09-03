@@ -53,43 +53,12 @@
     text-align: center;
     text-shadow: 0 2px 18px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.9);
   }
-  .lines p {
-    margin: 0.15em 0;
-    opacity: 0;
-    transform: translate3d(0, 24px, 0);
-    transition: opacity 0.55s ease, transform 0.55s ease;
-  }
-  .lines p.show { opacity: 0.96; transform: translate3d(0, 0, 0); }
-  .lines p.dissolve {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
+  .lines p { margin: 0.2em 0; }
   .lines p .ch {
     display: inline-block;
-    position: relative;
+    will-change: transform, opacity, filter;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-  }
-  .lines p.dissolve .ch {
-    animation-name: particle-up;
-    animation-duration: var(--dur, 0.85s);
-    animation-timing-function: cubic-bezier(.15,.8,.2,1);
-    animation-fill-mode: forwards;
-    animation-delay: var(--delay, 0s);
-  }
-  @keyframes particle-up {
-    0% {
-      opacity: 1;
-      transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
-      filter: blur(0);
-    }
-    40% { opacity: 0.7; }
-    100% {
-      opacity: 0;
-      transform: translate3d(var(--tx, 0px), var(--ty, -100px), 0) scale(var(--sc, 0.3)) rotate(var(--rot, 18deg));
-      filter: blur(2.5px);
-    }
   }
   .cta {
     min-height: 100svh;
@@ -201,155 +170,113 @@
 <script>
 (function () {
   var bgs = [null,
-    document.getElementById('bg1'),
-    document.getElementById('bg2'),
-    document.getElementById('bg3'),
-    document.getElementById('bg4'),
-    document.getElementById('bg5'),
-    document.getElementById('bg6')
+    document.getElementById("bg1"),
+    document.getElementById("bg2"),
+    document.getElementById("bg3"),
+    document.getElementById("bg4"),
+    document.getElementById("bg5"),
+    document.getElementById("bg6")
   ];
 
-  function rand(a, b) { return a + Math.random() * (b - a); }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function ease(t) { return t * t * (3 - 2 * t); }
+  function assembleAmount(n) {
+    // n = line midpoint / viewport height (0=top, 1=bottom)
+    // below: particles. center: text. above: particles gone.
+    if (n > 0.88) return 0;
+    if (n > 0.58) return ease(1 - (n - 0.58) / 0.30); // converge while rising
+    if (n > 0.30) return 1;                           // hold
+    if (n > 0.06) return ease((n - 0.06) / 0.24);     // dissolve upward
+    return 0;
+  }
 
-  function wrapChars(p) {
-    if (p.getAttribute('data-wrapped')) return;
+  var lines = [];
+  document.querySelectorAll(".lines p").forEach(function (p) {
     var text = p.textContent;
-    p.textContent = '';
+    p.textContent = "";
+    var chars = [];
     for (var i = 0; i < text.length; i++) {
-      var span = document.createElement('span');
-      span.className = 'ch';
-      span.textContent = text.charAt(i) === ' ' ? '\u00A0' : text.charAt(i);
+      var span = document.createElement("span");
+      span.className = "ch";
+      span.textContent = text.charAt(i) === " " ? "\u00A0" : text.charAt(i);
+      var incoming = {
+        x: (Math.random() - 0.5) * 160,
+        y: 90 + Math.random() * 140,
+        r: (Math.random() - 0.5) * 50,
+        s: 0.12 + Math.random() * 0.28
+      };
+      var outgoing = {
+        x: (Math.random() - 0.5) * 180,
+        y: -(90 + Math.random() * 150),
+        r: (Math.random() - 0.5) * 60,
+        s: 0.1 + Math.random() * 0.28
+      };
       p.appendChild(span);
+      chars.push({ el: span, inn: incoming, out: outgoing });
     }
-    p.setAttribute('data-wrapped', '1');
+    lines.push({ p: p, chars: chars });
+  });
+
+  function setChar(ch, from, t) {
+    var k = 1 - t;
+    var x = from.x * k;
+    var y = from.y * k;
+    var r = from.r * k;
+    var s = 1 + (from.s - 1) * k;
+    var o = 0.08 + 0.9 * t;
+    var blur = (1 - t) * 2.4;
+    ch.el.style.opacity = o.toFixed(3);
+    ch.el.style.filter = "blur(" + blur.toFixed(2) + "px)";
+    ch.el.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0) scale(" + s.toFixed(2) + ") rotate(" + r.toFixed(1) + "deg)";
   }
 
-  function rollParticles(p) {
-    var chars = p.querySelectorAll('.ch');
-    for (var i = 0; i < chars.length; i++) {
-      var span = chars[i];
-      span.style.setProperty('--delay', (i * 0.022 + rand(0, 0.05)).toFixed(3) + 's');
-      span.style.setProperty('--dur', rand(0.65, 1.15).toFixed(2) + 's');
-      span.style.setProperty('--tx', rand(-55, 55).toFixed(1) + 'px');
-      span.style.setProperty('--ty', rand(-140, -70).toFixed(1) + 'px');
-      span.style.setProperty('--sc', rand(0.12, 0.42).toFixed(2));
-      span.style.setProperty('--rot', rand(-36, 36).toFixed(1) + 'deg');
-      span.style.webkitAnimation = 'none';
-      span.style.animation = 'none';
-      void span.offsetWidth;
-      span.style.webkitAnimation = '';
-      span.style.animation = '';
-    }
-  }
-
-  var lines = document.querySelectorAll('.lines p');
-  for (var i = 0; i < lines.length; i++) wrapChars(lines[i]);
-
-  var lineState = new WeakMap();
-  var lastY = window.pageYOffset || 0;
-
-  function setBg(n) {
-    for (var i = 1; i < bgs.length; i++) {
-      if (bgs[i]) bgs[i].style.opacity = (i === n) ? '1' : '0';
-    }
-  }
-
-  function show(p) {
-    p.classList.remove('dissolve');
-    var chars = p.querySelectorAll('.ch');
-    for (var i = 0; i < chars.length; i++) {
-      chars[i].style.webkitAnimation = 'none';
-      chars[i].style.animation = 'none';
-      chars[i].style.opacity = '';
-      chars[i].style.transform = '';
-      chars[i].style.filter = '';
-    }
-    p.classList.add('show');
-    lineState.set(p, 'show');
-  }
-
-  function dissolve(p) {
-    if (lineState.get(p) === 'dissolve') return;
-    p.classList.remove('show');
-    rollParticles(p);
-    p.classList.add('dissolve');
-    lineState.set(p, 'dissolve');
-  }
-
-  function hide(p) {
-    p.classList.remove('show', 'dissolve');
-    var chars = p.querySelectorAll('.ch');
-    for (var i = 0; i < chars.length; i++) {
-      chars[i].style.webkitAnimation = 'none';
-      chars[i].style.animation = 'none';
-      chars[i].style.opacity = '';
-      chars[i].style.transform = '';
-      chars[i].style.filter = '';
-    }
-    lineState.set(p, 'hide');
-  }
-
-  function update() {
-    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
-    var goingUp = y < lastY - 0.5;
+  function tick() {
     var vh = window.innerHeight || 1;
     var active = 1;
-
-    var sections = document.querySelectorAll('[data-scene]');
-    for (var s = 0; s < sections.length; s++) {
-      var sec = sections[s];
-      var n = Number(sec.getAttribute('data-scene'));
-      var sr = sec.getBoundingClientRect();
-      if (sr.top < vh * 0.55 && sr.bottom > vh * 0.35) active = n;
-
-      var ps = sec.querySelectorAll('.lines p');
-      for (var j = 0; j < ps.length; j++) {
-        var p = ps[j];
-        var r = p.getBoundingClientRect();
-        var mid = r.top + r.height * 0.5;
-        var st = lineState.get(p) || 'hide';
-
-        // leave upward: dissolve into particles
-        if (mid < vh * 0.18 || (goingUp && mid < vh * 0.32 && st === 'show')) {
-          dissolve(p);
-          continue;
-        }
-        // still below: keep hidden
-        if (r.top > vh * 0.88) {
-          if (st !== 'hide') hide(p);
-          continue;
-        }
-        // in view: show (entering from below or resting)
-        if (mid > vh * 0.22 && mid < vh * 0.82) {
-          if (st !== 'show') show(p);
-        }
+    document.querySelectorAll("[data-scene]").forEach(function (sec) {
+      var r = sec.getBoundingClientRect();
+      if (r.top < vh * 0.55 && r.bottom > vh * 0.35) {
+        active = Number(sec.getAttribute("data-scene"));
       }
+    });
+    for (var i = 1; i < bgs.length; i++) {
+      if (bgs[i]) bgs[i].style.opacity = i === active ? "1" : "0";
     }
 
-    setBg(active);
-    lastY = y;
+    for (var L = 0; L < lines.length; L++) {
+      var line = lines[L];
+      var rec = line.p.getBoundingClientRect();
+      var n = (rec.top + rec.height * 0.5) / vh;
+      var t = assembleAmount(n);
+      var fromBelow = n > 0.5;
+      for (var c = 0; c < line.chars.length; c++) {
+        setChar(line.chars[c], fromBelow ? line.chars[c].inn : line.chars[c].out, t);
+      }
+    }
   }
 
-  var ticking = false;
-  function requestUpdate() {
-    if (ticking) return;
-    ticking = true;
+  var locked = false;
+  function requestTick() {
+    if (locked) return;
+    locked = true;
     requestAnimationFrame(function () {
-      update();
-      ticking = false;
+      tick();
+      locked = false;
     });
   }
 
-  window.addEventListener('scroll', requestUpdate, { passive: true });
-  window.addEventListener('touchmove', requestUpdate, { passive: true });
-  window.addEventListener('resize', requestUpdate);
-  document.addEventListener('visibilitychange', requestUpdate);
-  update();
+  window.addEventListener("scroll", requestTick, { passive: true });
+  window.addEventListener("touchmove", requestTick, { passive: true });
+  window.addEventListener("touchstart", requestTick, { passive: true });
+  window.addEventListener("wheel", requestTick, { passive: true });
+  window.addEventListener("resize", requestTick);
+  document.addEventListener("visibilitychange", requestTick);
+  tick();
 
-  document.getElementById('form').addEventListener('submit', function (e) {
+  document.getElementById("form").addEventListener("submit", function (e) {
     e.preventDefault();
-    e.target.style.display = 'none';
-    document.getElementById('thanks').style.display = 'block';
+    e.target.style.display = "none";
+    document.getElementById("thanks").style.display = "block";
   });
 })();
 </script>
