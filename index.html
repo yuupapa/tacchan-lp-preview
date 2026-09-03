@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>場所に縛られない働き方の作り方｜無料で「環境を先に変える」手順を期間限定プレゼント！</title>
-<meta name="description" content="環境を先に変える手順（期間限定）- たっちゃんが実践した場所に縛られない働き方の始め方を無料公開">
+<meta name="description" content="環境を先に変える手順（期間限定）">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
-  body { font-family: "Noto Sans JP", sans-serif; overflow-x: hidden; }
+  body { font-family: "Noto Sans JP", sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
   .bg {
     position: fixed; top: 0; left: 0; right: 0; z-index: 0;
     height: 100svh;
@@ -27,7 +27,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(8,8,10,.16) 0%, rgba(8,8,10,.28) 45%, rgba(8,8,10,.22) 100%);
+    background: linear-gradient(180deg, rgba(8,8,10,.18) 0%, rgba(8,8,10,.3) 50%, rgba(8,8,10,.24) 100%);
   }
   #bg1 { background-image: url("scene-1.jpg"); }
   #bg2 { background-image: url("scene-2.jpg"); }
@@ -44,49 +44,51 @@
     padding: 4rem 1.25rem;
   }
   .lines {
-    max-width: 42rem;
+    max-width: 36rem;
     font-family: "Noto Serif JP", serif;
     font-weight: 400;
-    letter-spacing: 0.12em;
-    line-height: 2.15;
+    letter-spacing: 0.14em;
+    line-height: 2.2;
     font-size: clamp(1.7rem, 5.4vw, 2.75rem);
     text-align: center;
     text-shadow: 0 2px 18px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.9);
   }
   .lines p {
+    margin: 0.15em 0;
     opacity: 0;
-    transform: translateY(22px);
-    transition: opacity 0.65s ease, transform 0.65s ease;
-    will-change: transform, opacity;
+    transform: translate3d(0, 24px, 0);
+    transition: opacity 0.55s ease, transform 0.55s ease;
   }
-  .lines p.show { opacity: 0.96; transform: none; }
+  .lines p.show { opacity: 0.96; transform: translate3d(0, 0, 0); }
   .lines p.dissolve {
-    opacity: 1;
-    transform: none;
-    transition: none;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
   .lines p .ch {
     display: inline-block;
-    will-change: transform, opacity, filter;
+    position: relative;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
   .lines p.dissolve .ch {
-    animation: particle-up var(--dur, 0.9s) cubic-bezier(.2,.7,.2,1) forwards;
+    animation-name: particle-up;
+    animation-duration: var(--dur, 0.85s);
+    animation-timing-function: cubic-bezier(.15,.8,.2,1);
+    animation-fill-mode: forwards;
     animation-delay: var(--delay, 0s);
   }
   @keyframes particle-up {
     0% {
       opacity: 1;
-      transform: translate(0, 0) scale(1) rotate(0deg);
+      transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
       filter: blur(0);
     }
-    55% {
-      opacity: 0.55;
-      filter: blur(0.4px);
-    }
+    40% { opacity: 0.7; }
     100% {
       opacity: 0;
-      transform: translate(var(--tx, 0px), var(--ty, -90px)) scale(var(--sc, 0.35)) rotate(var(--rot, 12deg));
-      filter: blur(2.2px);
+      transform: translate3d(var(--tx, 0px), var(--ty, -100px), 0) scale(var(--sc, 0.3)) rotate(var(--rot, 18deg));
+      filter: blur(2.5px);
     }
   }
   .cta {
@@ -125,15 +127,11 @@
     font-size: 1.05rem; font-weight: 500;
     font-family: inherit; cursor: pointer;
   }
-  button:hover { background: var(--accent-light); }
   .hint { color: rgba(255,255,255,.4); font-size: .75rem; margin-top: .2rem; }
   .thanks { display: none; color: rgba(255,255,255,.9); line-height: 1.9; }
   footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.3); font-size: .75rem; letter-spacing: .12em; }
   @media (max-width: 768px) {
-    .lines { letter-spacing: .06em; line-height: 1.95; font-size: clamp(1.55rem, 6.2vw, 2.1rem); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .lines p.dissolve .ch { animation: none; opacity: 0; }
+    .lines { letter-spacing: .07em; line-height: 2; font-size: clamp(1.55rem, 6.4vw, 2.15rem); }
   }
 </style>
 </head>
@@ -148,47 +146,39 @@
   <div class="content">
     <section class="beat" data-scene="1">
       <div class="lines">
-        <p>場所に縛られずに働いている</p>
-        <p>今日いる場所で仕事が終わる</p>
-        <p>明日は別の場所でもいい</p>
-        <p>車は必須じゃない</p>
-        <p>必要なのはPCとネット</p>
+        <p>場所に縛られない</p>
+        <p>今日いる場所で終わる</p>
+        <p>明日はどこでもいい</p>
+        <p>必要なものは少ない</p>
       </div>
     </section>
     <section class="beat" data-scene="2">
       <div class="lines">
         <p>先に変えたのは収入じゃない</p>
         <p>環境だ</p>
-        <p>借金500万円からスタートした</p>
-        <p>やらないといけない状態にした</p>
+        <p>動けないままだった</p>
+        <p>だから先に暮らしを変えた</p>
       </div>
     </section>
     <section class="beat" data-scene="3">
       <div class="lines">
-        <p>当時は借金が500万円あった</p>
-        <p>やる気が出てから動こうとすると</p>
-        <p>いつまでも動かない</p>
-        <p>待っていたら返せなかった</p>
-        <p>だから先に暮らしを変えた</p>
-        <p>車を家にした</p>
-        <p>やらないといけない状態にした</p>
+        <p>待っていても始まらない</p>
+        <p>やる気はあとから来る</p>
+        <p>先に状態をつくる</p>
+        <p>逃げられない場所に立つ</p>
       </div>
     </section>
     <section class="beat" data-scene="4">
       <div class="lines">
-        <p>車中泊は800日を超えた</p>
-        <p>旅する暮らしと仕事が同時に成立している</p>
+        <p>旅と仕事が同時にある</p>
         <p>遊んでばかりではない</p>
-        <p>顔出しは必須じゃない</p>
-        <p>YouTubeは場所を選ばない手段</p>
+        <p>顔を見せなくてもいい</p>
         <p>収入はあとからついてきた</p>
-        <p>今は年商〇〇〇〇万円</p>
-        <p>先に動かしたのは暮らしのほうだ</p>
       </div>
     </section>
     <section class="beat" data-scene="5">
       <div class="lines">
-        <p>やっていることは2つだけ</p>
+        <p>やっていることはふたつ</p>
         <p>やらないといけない状態にする</p>
         <p>自分の環境を先に変える</p>
       </div>
@@ -209,7 +199,8 @@
     </section>
   </div>
 <script>
-  const bgs = [null,
+(function () {
+  var bgs = [null,
     document.getElementById('bg1'),
     document.getElementById('bg2'),
     document.getElementById('bg3'),
@@ -218,131 +209,149 @@
     document.getElementById('bg6')
   ];
 
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
   function wrapChars(p) {
-    if (p.dataset.wrapped) return;
-    const text = p.textContent;
+    if (p.getAttribute('data-wrapped')) return;
+    var text = p.textContent;
     p.textContent = '';
-    [...text].forEach((ch, i) => {
-      const span = document.createElement('span');
+    for (var i = 0; i < text.length; i++) {
+      var span = document.createElement('span');
       span.className = 'ch';
-      span.textContent = ch === ' ' ? '\u00A0' : ch;
-      span.style.setProperty('--delay', (i * 0.018) + 's');
-      span.style.setProperty('--dur', (0.75 + Math.random() * 0.45) + 's');
-      span.style.setProperty('--tx', ((Math.random() - 0.5) * 70).toFixed(1) + 'px');
-      span.style.setProperty('--ty', (-70 - Math.random() * 110).toFixed(1) + 'px');
-      span.style.setProperty('--sc', (0.2 + Math.random() * 0.35).toFixed(2));
-      span.style.setProperty('--rot', ((Math.random() - 0.5) * 40).toFixed(1) + 'deg');
+      span.textContent = text.charAt(i) === ' ' ? '\u00A0' : text.charAt(i);
       p.appendChild(span);
-    });
-    p.dataset.wrapped = '1';
+    }
+    p.setAttribute('data-wrapped', '1');
   }
 
-  document.querySelectorAll('.lines p').forEach(wrapChars);
+  function rollParticles(p) {
+    var chars = p.querySelectorAll('.ch');
+    for (var i = 0; i < chars.length; i++) {
+      var span = chars[i];
+      span.style.setProperty('--delay', (i * 0.022 + rand(0, 0.05)).toFixed(3) + 's');
+      span.style.setProperty('--dur', rand(0.65, 1.15).toFixed(2) + 's');
+      span.style.setProperty('--tx', rand(-55, 55).toFixed(1) + 'px');
+      span.style.setProperty('--ty', rand(-140, -70).toFixed(1) + 'px');
+      span.style.setProperty('--sc', rand(0.12, 0.42).toFixed(2));
+      span.style.setProperty('--rot', rand(-36, 36).toFixed(1) + 'deg');
+      span.style.webkitAnimation = 'none';
+      span.style.animation = 'none';
+      void span.offsetWidth;
+      span.style.webkitAnimation = '';
+      span.style.animation = '';
+    }
+  }
 
-  let lastY = window.scrollY;
-  const state = new Map();
+  var lines = document.querySelectorAll('.lines p');
+  for (var i = 0; i < lines.length; i++) wrapChars(lines[i]);
+
+  var lineState = new WeakMap();
+  var lastY = window.pageYOffset || 0;
 
   function setBg(n) {
-    bgs.forEach((el, i) => { if (el) el.style.opacity = i === n ? '1' : '0'; });
+    for (var i = 1; i < bgs.length; i++) {
+      if (bgs[i]) bgs[i].style.opacity = (i === n) ? '1' : '0';
+    }
   }
 
-  function showLine(p) {
+  function show(p) {
     p.classList.remove('dissolve');
+    var chars = p.querySelectorAll('.ch');
+    for (var i = 0; i < chars.length; i++) {
+      chars[i].style.webkitAnimation = 'none';
+      chars[i].style.animation = 'none';
+      chars[i].style.opacity = '';
+      chars[i].style.transform = '';
+      chars[i].style.filter = '';
+    }
     p.classList.add('show');
+    lineState.set(p, 'show');
   }
 
-  function dissolveLine(p) {
-    if (p.classList.contains('dissolve')) return;
+  function dissolve(p) {
+    if (lineState.get(p) === 'dissolve') return;
     p.classList.remove('show');
+    rollParticles(p);
     p.classList.add('dissolve');
-    // re-roll particle vectors each dissolve for variety
-    p.querySelectorAll('.ch').forEach((span) => {
-      span.style.setProperty('--delay', (Math.random() * 0.12).toFixed(3) + 's');
-      span.style.setProperty('--dur', (0.7 + Math.random() * 0.5).toFixed(2) + 's');
-      span.style.setProperty('--tx', ((Math.random() - 0.5) * 80).toFixed(1) + 'px');
-      span.style.setProperty('--ty', (-80 - Math.random() * 120).toFixed(1) + 'px');
-      span.style.setProperty('--sc', (0.15 + Math.random() * 0.4).toFixed(2));
-      span.style.setProperty('--rot', ((Math.random() - 0.5) * 48).toFixed(1) + 'deg');
-      span.style.animation = 'none';
-      void span.offsetWidth;
-      span.style.animation = '';
-    });
+    lineState.set(p, 'dissolve');
   }
 
-  function resetLine(p) {
+  function hide(p) {
     p.classList.remove('show', 'dissolve');
-    p.querySelectorAll('.ch').forEach((span) => {
-      span.style.animation = 'none';
-      span.style.opacity = '';
-      span.style.transform = '';
-      span.style.filter = '';
-      void span.offsetWidth;
-      span.style.animation = '';
-    });
+    var chars = p.querySelectorAll('.ch');
+    for (var i = 0; i < chars.length; i++) {
+      chars[i].style.webkitAnimation = 'none';
+      chars[i].style.animation = 'none';
+      chars[i].style.opacity = '';
+      chars[i].style.transform = '';
+      chars[i].style.filter = '';
+    }
+    lineState.set(p, 'hide');
   }
 
   function update() {
-    const y = window.scrollY;
-    const goingUp = y < lastY - 1;
-    const goingDown = y > lastY + 1;
-    const mid = window.innerHeight * 0.42;
-    let active = 1;
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var goingUp = y < lastY - 0.5;
+    var vh = window.innerHeight || 1;
+    var active = 1;
 
-    document.querySelectorAll('section.beat, section.cta').forEach((sec) => {
-      const n = Number(sec.dataset.scene);
-      const r = sec.getBoundingClientRect();
-      const visible = r.top < window.innerHeight * 0.72 && r.bottom > window.innerHeight * 0.28;
-      const centerish = r.top < mid && r.bottom > mid;
-      if (centerish) active = n;
+    var sections = document.querySelectorAll('[data-scene]');
+    for (var s = 0; s < sections.length; s++) {
+      var sec = sections[s];
+      var n = Number(sec.getAttribute('data-scene'));
+      var sr = sec.getBoundingClientRect();
+      if (sr.top < vh * 0.55 && sr.bottom > vh * 0.35) active = n;
 
-      const lines = sec.querySelectorAll('.lines p');
-      if (!lines.length) return;
+      var ps = sec.querySelectorAll('.lines p');
+      for (var j = 0; j < ps.length; j++) {
+        var p = ps[j];
+        var r = p.getBoundingClientRect();
+        var mid = r.top + r.height * 0.5;
+        var st = lineState.get(p) || 'hide';
 
-      const prev = state.get(sec) || 'hidden';
-      if (visible && !goingUp) {
-        lines.forEach((p, i) => {
-          setTimeout(() => showLine(p), i * 70);
-        });
-        state.set(sec, 'shown');
-      } else if (!visible && r.bottom < window.innerHeight * 0.25) {
-        // left upward: particle dissolve
-        if (prev === 'shown' || goingUp) {
-          lines.forEach(dissolveLine);
-          state.set(sec, 'dissolved');
+        // leave upward: dissolve into particles
+        if (mid < vh * 0.18 || (goingUp && mid < vh * 0.32 && st === 'show')) {
+          dissolve(p);
+          continue;
         }
-      } else if (!visible && r.top > window.innerHeight * 0.75) {
-        // below viewport: hard reset for next enter
-        lines.forEach(resetLine);
-        state.set(sec, 'hidden');
-      } else if (goingDown && visible && prev === 'dissolved') {
-        lines.forEach(resetLine);
-        lines.forEach((p, i) => setTimeout(() => showLine(p), i * 70));
-        state.set(sec, 'shown');
+        // still below: keep hidden
+        if (r.top > vh * 0.88) {
+          if (st !== 'hide') hide(p);
+          continue;
+        }
+        // in view: show (entering from below or resting)
+        if (mid > vh * 0.22 && mid < vh * 0.82) {
+          if (st !== 'show') show(p);
+        }
       }
-    });
+    }
 
     setBg(active);
     lastY = y;
   }
 
-  let ticking = false;
-  function onScroll() {
+  var ticking = false;
+  function requestUpdate() {
     if (ticking) return;
     ticking = true;
-    requestAnimationFrame(() => {
+    requestAnimationFrame(function () {
       update();
       ticking = false;
     });
   }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
+
+  window.addEventListener('scroll', requestUpdate, { passive: true });
+  window.addEventListener('touchmove', requestUpdate, { passive: true });
+  window.addEventListener('resize', requestUpdate);
+  document.addEventListener('visibilitychange', requestUpdate);
   update();
 
-  document.getElementById('form').addEventListener('submit', (e) => {
+  document.getElementById('form').addEventListener('submit', function (e) {
     e.preventDefault();
     e.target.style.display = 'none';
     document.getElementById('thanks').style.display = 'block';
   });
+})();
 </script>
 </body>
 </html>
