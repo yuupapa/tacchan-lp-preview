@@ -35,73 +35,60 @@
   #bg4 { background-image: url("scene-4.jpg"); }
   #bg5 { background-image: url("scene-5.jpg"); }
   #bg6 { background-image: url("scene-6.jpg"); }
-  .gradient-scene-1 {
-    background:
-      radial-gradient(ellipse 120% 80% at 20% 80%, rgba(45,55,72,0.9) 0%, transparent 60%),
-      radial-gradient(ellipse 80% 60% at 80% 30%, rgba(74,85,104,0.7) 0%, transparent 50%),
-      linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
-  }
-  .gradient-scene-2 {
-    background:
-      radial-gradient(ellipse 100% 100% at 50% 100%, rgba(139,90,43,0.4) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(255,183,77,0.15) 0%, transparent 50%),
-      linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 30%, #1a1a1a 100%);
-  }
-  .gradient-scene-3 {
-    background:
-      radial-gradient(ellipse 80% 60% at 30% 70%, rgba(55,65,81,0.8) 0%, transparent 50%),
-      radial-gradient(ellipse 100% 80% at 70% 40%, rgba(31,41,55,0.6) 0%, transparent 60%),
-      linear-gradient(160deg, #111827 0%, #1f2937 50%, #111827 100%);
-  }
-  .gradient-scene-4 {
-    background:
-      radial-gradient(ellipse 90% 70% at 60% 80%, rgba(16,185,129,0.15) 0%, transparent 50%),
-      radial-gradient(ellipse 70% 50% at 20% 30%, rgba(59,130,246,0.1) 0%, transparent 50%),
-      linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-  }
-  .gradient-scene-5 {
-    background:
-      radial-gradient(ellipse 100% 80% at 50% 60%, rgba(212,165,116,0.2) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,92,42,0.3) 0%, transparent 50%),
-      linear-gradient(180deg, #18181b 0%, #27272a 50%, #18181b 100%);
-  }
-  .gradient-cta {
-    background:
-      radial-gradient(ellipse 80% 60% at 50% 100%, rgba(212,165,116,0.3) 0%, transparent 60%),
-      linear-gradient(180deg, #0a0a0a 0%, #171717 100%);
-  }
   .content { position: relative; z-index: 1; }
   section.beat {
     min-height: 100svh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4rem 1.5rem;
+    padding: 4rem 1.25rem;
   }
   .lines {
     max-width: 42rem;
     font-family: "Noto Serif JP", serif;
     font-weight: 400;
-    letter-spacing: 0.15em;
-    line-height: 2.4;
-    font-size: clamp(1.15rem, 3.6vw, 1.85rem);
+    letter-spacing: 0.12em;
+    line-height: 2.15;
+    font-size: clamp(1.7rem, 5.4vw, 2.75rem);
     text-align: center;
     text-shadow: 0 2px 18px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.9);
   }
   .lines p {
     opacity: 0;
-    transform: translateY(18px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
+    transform: translateY(22px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+    will-change: transform, opacity;
   }
-  .lines p.show { opacity: 0.95; transform: none; }
-  .lines p:nth-child(1) { transition-delay: .05s; }
-  .lines p:nth-child(2) { transition-delay: .15s; }
-  .lines p:nth-child(3) { transition-delay: .25s; }
-  .lines p:nth-child(4) { transition-delay: .35s; }
-  .lines p:nth-child(5) { transition-delay: .45s; }
-  .lines p:nth-child(6) { transition-delay: .55s; }
-  .lines p:nth-child(7) { transition-delay: .65s; }
-  .lines p:nth-child(8) { transition-delay: .75s; }
+  .lines p.show { opacity: 0.96; transform: none; }
+  .lines p.dissolve {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .lines p .ch {
+    display: inline-block;
+    will-change: transform, opacity, filter;
+  }
+  .lines p.dissolve .ch {
+    animation: particle-up var(--dur, 0.9s) cubic-bezier(.2,.7,.2,1) forwards;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes particle-up {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0) scale(1) rotate(0deg);
+      filter: blur(0);
+    }
+    55% {
+      opacity: 0.55;
+      filter: blur(0.4px);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--tx, 0px), var(--ty, -90px)) scale(var(--sc, 0.35)) rotate(var(--rot, 12deg));
+      filter: blur(2.2px);
+    }
+  }
   .cta {
     min-height: 100svh;
     display: flex;
@@ -115,11 +102,11 @@
   .cta h2 {
     font-family: "Noto Serif JP", serif;
     font-weight: 400;
-    font-size: clamp(1.6rem, 4vw, 2.2rem);
-    letter-spacing: .16em;
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    letter-spacing: .14em;
     margin-bottom: 1.2rem;
   }
-  .cta .lead { color: rgba(255,255,255,.6); font-size: .95rem; line-height: 1.9; margin-bottom: 2rem; }
+  .cta .lead { color: rgba(255,255,255,.6); font-size: 1.05rem; line-height: 1.9; margin-bottom: 2rem; }
   form { display: flex; flex-direction: column; gap: 1rem; }
   input[type=email] {
     width: 100%; padding: 1rem 1.4rem;
@@ -143,7 +130,10 @@
   .thanks { display: none; color: rgba(255,255,255,.9); line-height: 1.9; }
   footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.3); font-size: .75rem; letter-spacing: .12em; }
   @media (max-width: 768px) {
-    .lines { letter-spacing: .08em; line-height: 2; }
+    .lines { letter-spacing: .06em; line-height: 1.95; font-size: clamp(1.55rem, 6.2vw, 2.1rem); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lines p.dissolve .ch { animation: none; opacity: 0; }
   }
 </style>
 </head>
@@ -227,20 +217,127 @@
     document.getElementById('bg5'),
     document.getElementById('bg6')
   ];
-  const sections = document.querySelectorAll('[data-scene]');
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      const lines = entry.target.querySelectorAll('.lines p');
-      if (entry.isIntersecting && entry.intersectionRatio > 0.25) {
-        lines.forEach(p => p.classList.add('show'));
-        const n = Number(entry.target.dataset.scene);
-        bgs.forEach((el, i) => { if (el) el.style.opacity = i === n ? '1' : '0'; });
-      } else if (!entry.isIntersecting) {
-        lines.forEach(p => p.classList.remove('show'));
+
+  function wrapChars(p) {
+    if (p.dataset.wrapped) return;
+    const text = p.textContent;
+    p.textContent = '';
+    [...text].forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.className = 'ch';
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      span.style.setProperty('--delay', (i * 0.018) + 's');
+      span.style.setProperty('--dur', (0.75 + Math.random() * 0.45) + 's');
+      span.style.setProperty('--tx', ((Math.random() - 0.5) * 70).toFixed(1) + 'px');
+      span.style.setProperty('--ty', (-70 - Math.random() * 110).toFixed(1) + 'px');
+      span.style.setProperty('--sc', (0.2 + Math.random() * 0.35).toFixed(2));
+      span.style.setProperty('--rot', ((Math.random() - 0.5) * 40).toFixed(1) + 'deg');
+      p.appendChild(span);
+    });
+    p.dataset.wrapped = '1';
+  }
+
+  document.querySelectorAll('.lines p').forEach(wrapChars);
+
+  let lastY = window.scrollY;
+  const state = new Map();
+
+  function setBg(n) {
+    bgs.forEach((el, i) => { if (el) el.style.opacity = i === n ? '1' : '0'; });
+  }
+
+  function showLine(p) {
+    p.classList.remove('dissolve');
+    p.classList.add('show');
+  }
+
+  function dissolveLine(p) {
+    if (p.classList.contains('dissolve')) return;
+    p.classList.remove('show');
+    p.classList.add('dissolve');
+    // re-roll particle vectors each dissolve for variety
+    p.querySelectorAll('.ch').forEach((span) => {
+      span.style.setProperty('--delay', (Math.random() * 0.12).toFixed(3) + 's');
+      span.style.setProperty('--dur', (0.7 + Math.random() * 0.5).toFixed(2) + 's');
+      span.style.setProperty('--tx', ((Math.random() - 0.5) * 80).toFixed(1) + 'px');
+      span.style.setProperty('--ty', (-80 - Math.random() * 120).toFixed(1) + 'px');
+      span.style.setProperty('--sc', (0.15 + Math.random() * 0.4).toFixed(2));
+      span.style.setProperty('--rot', ((Math.random() - 0.5) * 48).toFixed(1) + 'deg');
+      span.style.animation = 'none';
+      void span.offsetWidth;
+      span.style.animation = '';
+    });
+  }
+
+  function resetLine(p) {
+    p.classList.remove('show', 'dissolve');
+    p.querySelectorAll('.ch').forEach((span) => {
+      span.style.animation = 'none';
+      span.style.opacity = '';
+      span.style.transform = '';
+      span.style.filter = '';
+      void span.offsetWidth;
+      span.style.animation = '';
+    });
+  }
+
+  function update() {
+    const y = window.scrollY;
+    const goingUp = y < lastY - 1;
+    const goingDown = y > lastY + 1;
+    const mid = window.innerHeight * 0.42;
+    let active = 1;
+
+    document.querySelectorAll('section.beat, section.cta').forEach((sec) => {
+      const n = Number(sec.dataset.scene);
+      const r = sec.getBoundingClientRect();
+      const visible = r.top < window.innerHeight * 0.72 && r.bottom > window.innerHeight * 0.28;
+      const centerish = r.top < mid && r.bottom > mid;
+      if (centerish) active = n;
+
+      const lines = sec.querySelectorAll('.lines p');
+      if (!lines.length) return;
+
+      const prev = state.get(sec) || 'hidden';
+      if (visible && !goingUp) {
+        lines.forEach((p, i) => {
+          setTimeout(() => showLine(p), i * 70);
+        });
+        state.set(sec, 'shown');
+      } else if (!visible && r.bottom < window.innerHeight * 0.25) {
+        // left upward: particle dissolve
+        if (prev === 'shown' || goingUp) {
+          lines.forEach(dissolveLine);
+          state.set(sec, 'dissolved');
+        }
+      } else if (!visible && r.top > window.innerHeight * 0.75) {
+        // below viewport: hard reset for next enter
+        lines.forEach(resetLine);
+        state.set(sec, 'hidden');
+      } else if (goingDown && visible && prev === 'dissolved') {
+        lines.forEach(resetLine);
+        lines.forEach((p, i) => setTimeout(() => showLine(p), i * 70));
+        state.set(sec, 'shown');
       }
     });
-  }, { threshold: [0.25, 0.5, 0.75] });
-  sections.forEach(s => io.observe(s));
+
+    setBg(active);
+    lastY = y;
+  }
+
+  let ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      update();
+      ticking = false;
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  update();
+
   document.getElementById('form').addEventListener('submit', (e) => {
     e.preventDefault();
     e.target.style.display = 'none';
