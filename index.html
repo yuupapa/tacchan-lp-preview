@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>場所に縛られない働き方の作り方｜無料で「環境を先に変える」手順を期間限定プレゼント！</title>
 <meta name="description" content="環境を先に変える手順（期間限定）- たっちゃんが実践した場所に縛られない働き方の始め方を無料公開">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,11 +14,13 @@
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
   body { font-family: "Noto Sans JP", sans-serif; overflow-x: hidden; }
   .bg {
-    position: fixed; inset: 0; z-index: 0;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 0;
+    height: 100svh;
     transition: opacity 0.8s ease;
     pointer-events: none;
-    background-size: cover;
-    background-position: center;
+    background-color: #14110e;
+    background-size: contain;
+    background-position: center 8%;
     background-repeat: no-repeat;
   }
   .bg::after {
@@ -70,7 +72,7 @@
   }
   .content { position: relative; z-index: 1; }
   section.beat {
-    min-height: 100vh;
+    min-height: 100svh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -101,7 +103,7 @@
   .lines p:nth-child(7) { transition-delay: .65s; }
   .lines p:nth-child(8) { transition-delay: .75s; }
   .cta {
-    min-height: 100vh;
+    min-height: 100svh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -146,12 +148,12 @@
 </style>
 </head>
 <body>
-  <div id="bg1" class="bg gradient-scene-1" style="opacity:1"></div>
-  <div id="bg2" class="bg gradient-scene-2" style="opacity:0"></div>
-  <div id="bg3" class="bg gradient-scene-3" style="opacity:0"></div>
-  <div id="bg4" class="bg gradient-scene-4" style="opacity:0"></div>
-  <div id="bg5" class="bg gradient-scene-5" style="opacity:0"></div>
-  <div id="bg6" class="bg gradient-cta" style="opacity:0"></div>
+  <div id="bg1" class="bg" style="opacity:1"></div>
+  <div id="bg2" class="bg" style="opacity:0"></div>
+  <div id="bg3" class="bg" style="opacity:0"></div>
+  <div id="bg4" class="bg" style="opacity:0"></div>
+  <div id="bg5" class="bg" style="opacity:0"></div>
+  <div id="bg6" class="bg" style="opacity:0"></div>
 
   <div class="content">
     <section class="beat" data-scene="1">
