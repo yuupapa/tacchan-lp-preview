@@ -17,7 +17,22 @@
     position: fixed; inset: 0; z-index: 0;
     transition: opacity 0.8s ease;
     pointer-events: none;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
+  .bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(8,8,10,.42) 0%, rgba(8,8,10,.58) 45%, rgba(8,8,10,.52) 100%);
+  }
+  #bg1 { background-image: url("scene-1.jpg"); }
+  #bg2 { background-image: url("scene-2.jpg"); }
+  #bg3 { background-image: url("scene-3.jpg"); }
+  #bg4 { background-image: url("scene-4.jpg"); }
+  #bg5 { background-image: url("scene-5.jpg"); }
+  #bg6 { background-image: url("scene-6.jpg"); }
   .gradient-scene-1 {
     background:
       radial-gradient(ellipse 120% 80% at 20% 80%, rgba(45,55,72,0.9) 0%, transparent 60%),
