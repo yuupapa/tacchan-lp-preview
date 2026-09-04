@@ -1,4 +1,4 @@
-/* v17: glyph-sampled canvas particles + solid text crossfade at hold */
+/* v18: glyph-sampled luminous light-mote particles (additive glow, no dark underlay) + solid text crossfade at hold */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -11,8 +11,8 @@
     document.getElementById("bg6")
   ];
 
-  var CORAL_COLOR = "#FF7F6A";
-  var CORAL_RGB = "255,127,106";
+  var EM_COLOR = "#7DFFB2";
+  var EM_RGB = "125,255,178";
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function ease(t) { return t * t * (3 - 2 * t); }
@@ -69,7 +69,7 @@
       var p = sec.querySelector(".lines p");
       if (!p) return;
       var sceneNum = Number(sec.getAttribute("data-scene")) || 0;
-      var useCoral = sceneNum === 5;
+      var useEm = sceneNum === 5;
       var lines = [[]];
       function pushRun(text, em) {
         if (!text) return;
@@ -93,7 +93,7 @@
       lines = lines.filter(function (line) {
         return line.some(function (run) { return /[^\s]/.test(run.text); });
       });
-      messages.push({ section: sec, lines: lines, particles: [], useCoral: useCoral });
+      messages.push({ section: sec, lines: lines, particles: [], useEm: useEm });
     });
     return messages;
   }
@@ -158,16 +158,16 @@
     var c = s.getContext("2d");
     var g = c.createRadialGradient(5, 5, 0, 5, 5, 5);
     g.addColorStop(0, "rgba(" + rgb + ",1)");
-    g.addColorStop(0.38, "rgba(" + rgb + ",0.88)");
+    g.addColorStop(0.22, "rgba(" + rgb + ",0.62)");
+    g.addColorStop(0.55, "rgba(" + rgb + ",0.20)");
     g.addColorStop(1, "rgba(" + rgb + ",0)");
     c.fillStyle = g;
     c.fillRect(0, 0, 10, 10);
     return s;
   }
-  var spriteLight = makeSprite("255,248,236");
-  var spriteGold = makeSprite("255,214,160");
-  var spriteCoral = makeSprite(CORAL_RGB);
-  var spriteDark = makeSprite("10,8,6");
+  var spriteLight = makeSprite("255,250,240");
+  var spriteGold = makeSprite("255,216,170");
+  var spriteEm = makeSprite(EM_RGB);
 
   function makeParticle(hx, hy, a, em, spread) {
     var seed = Math.random();
@@ -246,7 +246,7 @@
     var probe = document.createElement("canvas");
     var pctx = probe.getContext("2d", { willReadFrequently: true });
     var maxLineW = 0;
-    var useCoral = msg.useCoral;
+    var useEm = msg.useEm;
     var measured = msg.lines.map(function (runs) {
       var m = measureLine(pctx, runs, fs, track);
       if (m.width > maxLineW) maxLineW = m.width;
@@ -263,7 +263,7 @@
     pctx.textAlign = "left";
     pctx.textBaseline = "middle";
 
-    var emColor = useCoral ? CORAL_COLOR : "#ffcc80";
+    var emColor = useEm ? EM_COLOR : "#ffcc80";
     measured.forEach(function (m, li) {
       var x = (w - m.width) / 2;
       var y = pad + lineH * li + lineH / 2;
@@ -352,7 +352,7 @@
     msg.solidW = w;
     msg.solidH = h;
     msg.solidDpr = localDpr;
-    msg.useCoral = useCoral;
+    msg.useEm = useEm;
   }
 
   function rebuild() {
@@ -401,29 +401,19 @@
       var delaySpan = 0.78;
 
       var pFade = particleFadeOut(t);
-      var emSprite = msg.useCoral ? spriteCoral : spriteGold;
-
-      if (t > 0.22 && pFade > 0.01) {
-        ctx.globalAlpha = 0.22 * fade * pFade;
-        for (var d = 0; d < pts.length; d++) {
-          var dp = pts[d];
-          var ld = ease(clamp((t - dp.delay) / delaySpan, 0, 1));
-          if (ld < 0.20) continue;
-          var dxy = particleXY(dp, ld, fromBelow, now);
-          var ds = dp.size * (1.15 + 0.55 * ld);
-          ctx.drawImage(spriteDark, dxy.x - ds * 0.5, dxy.y - ds * 0.5, ds * 1.35, ds * 1.35);
-        }
-      }
+      var emSprite = msg.useEm ? spriteEm : spriteGold;
 
       if (pFade > 0.01) {
+        ctx.globalCompositeOperation = "lighter";
         for (var i = 0; i < pts.length; i++) {
           var p = pts[i];
           var local = ease(clamp((t - p.delay) / delaySpan, 0, 1));
           var xy = particleXY(p, local, fromBelow, now);
-          var size = p.size * (0.72 + 0.55 * local);
-          ctx.globalAlpha = (0.38 + 0.62 * local) * p.a * p.shade * fade * pFade;
+          var size = p.size * (0.9 + 0.7 * local);
+          ctx.globalAlpha = (0.30 + 0.58 * local) * p.a * p.shade * fade * pFade;
           ctx.drawImage(p.em ? emSprite : spriteLight, xy.x - size * 0.5, xy.y - size * 0.5, size, size);
         }
+        ctx.globalCompositeOperation = "source-over";
       }
 
       var solidAlpha = solidTextAlpha(t) * fade;
