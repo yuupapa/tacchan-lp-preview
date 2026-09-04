@@ -27,7 +27,11 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(8,8,10,.18) 0%, rgba(8,8,10,.3) 50%, rgba(8,8,10,.24) 100%);
+    background: linear-gradient(180deg, rgba(8,8,10,.06) 0%, rgba(8,8,10,.12) 50%, rgba(8,8,10,.08) 100%);
+  }
+  #bg6::after {
+    background: linear-gradient(180deg, rgba(8,8,10,.06) 0%, rgba(8,8,10,.12) 30%, transparent 50%),
+                linear-gradient(to top, rgba(8,8,10,.55) 0%, rgba(8,8,10,.22) 40%, transparent 70%);
   }
   #bg1 { background-image: url("scene-1.jpg"); }
   #bg2 { background-image: url("scene-2.jpg"); }
@@ -51,7 +55,12 @@
     line-height: 2.2;
     font-size: clamp(1.7rem, 5.4vw, 2.75rem);
     text-align: center;
-    text-shadow: 0 2px 18px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.9);
+    text-shadow: 0 2px 18px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.9), 0 0 24px rgba(0,0,0,.55);
+    background: rgba(0,0,0,.20);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    padding: 1.5rem 1.2rem;
+    border-radius: 0.625rem;
   }
   .lines p { margin: 0.2em 0; }
   .lines p .ch {
@@ -69,7 +78,7 @@
     text-align: center;
   }
   .cta-inner { width: 100%; max-width: 28rem; }
-  .eyebrow { color: rgba(255,255,255,.45); font-size: .8rem; letter-spacing: .2em; margin-bottom: 1rem; }
+  .eyebrow { color: rgba(255,255,255,.65); font-size: .8rem; letter-spacing: .2em; margin-bottom: 1rem; }
   .cta h2 {
     font-family: "Noto Serif JP", serif;
     font-weight: 400;
@@ -77,7 +86,7 @@
     letter-spacing: .14em;
     margin-bottom: 1.2rem;
   }
-  .cta .lead { color: rgba(255,255,255,.6); font-size: 1.05rem; line-height: 1.9; margin-bottom: 2rem; }
+  .cta .lead { color: rgba(255,255,255,.85); font-size: 1.05rem; line-height: 1.9; margin-bottom: 2rem; }
   form { display: flex; flex-direction: column; gap: 1rem; }
   input[type=email] {
     width: 100%; padding: 1rem 1.4rem;
@@ -96,21 +105,46 @@
     font-size: 1.05rem; font-weight: 500;
     font-family: inherit; cursor: pointer;
   }
-  .hint { color: rgba(255,255,255,.4); font-size: .75rem; margin-top: .2rem; }
+  .hint { color: rgba(255,255,255,.55); font-size: .75rem; margin-top: .2rem; }
   .thanks { display: none; color: rgba(255,255,255,.9); line-height: 1.9; }
   footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.3); font-size: .75rem; letter-spacing: .12em; }
   @media (max-width: 768px) {
     .lines { letter-spacing: .07em; line-height: 2; font-size: clamp(1.55rem, 6.4vw, 2.15rem); }
   }
+  /* Ken Burns animation */
+  @keyframes kenburns {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.06); }
+  }
+  .bg {
+    transform-origin: center center;
+  }
+  .bg.kb-active {
+    animation: kenburns 14s ease-out forwards;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bg.kb-active { animation: none; }
+  }
+  /* Film grain overlay */
+  .grain {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.10;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
 </style>
 </head>
 <body>
-  <div id="bg1" class="bg" style="opacity:1"></div>
+  <div id="bg1" class="bg kb-active" style="opacity:1"></div>
   <div id="bg2" class="bg" style="opacity:0"></div>
   <div id="bg3" class="bg" style="opacity:0"></div>
   <div id="bg4" class="bg" style="opacity:0"></div>
   <div id="bg5" class="bg" style="opacity:0"></div>
   <div id="bg6" class="bg" style="opacity:0"></div>
+  <div class="grain"></div>
 
   <div class="content">
     <section class="beat" data-scene="1">
@@ -182,11 +216,11 @@
   function ease(t) { return t * t * (3 - 2 * t); }
   function assembleAmount(n) {
     // n = line midpoint / viewport height (0=top, 1=bottom)
-    // below: particles. center: text. above: particles gone.
-    if (n > 0.88) return 0;
-    if (n > 0.58) return ease(1 - (n - 0.58) / 0.30); // converge while rising
-    if (n > 0.30) return 1;                           // hold
-    if (n > 0.06) return ease((n - 0.06) / 0.24);     // dissolve upward
+    // below: particles incoming. center: text readable (hold). above: particles dissolve.
+    if (n > 0.90) return 0;
+    if (n > 0.70) return ease(1 - (n - 0.70) / 0.20); // converge while rising (0.70 → 0.90)
+    if (n >= 0.22) return 1;                          // hold (0.22 → 0.70)
+    if (n > 0.06) return ease((n - 0.06) / 0.16);     // dissolve upward (0.06 → 0.22)
     return 0;
   }
 
@@ -240,7 +274,17 @@
       }
     });
     for (var i = 1; i < bgs.length; i++) {
-      if (bgs[i]) bgs[i].style.opacity = i === active ? "1" : "0";
+      if (bgs[i]) {
+        var isActive = i === active;
+        bgs[i].style.opacity = isActive ? "1" : "0";
+        if (isActive && !bgs[i].classList.contains("kb-active")) {
+          bgs[i].classList.remove("kb-active");
+          void bgs[i].offsetWidth; // force reflow to restart animation
+          bgs[i].classList.add("kb-active");
+        } else if (!isActive) {
+          bgs[i].classList.remove("kb-active");
+        }
+      }
     }
 
     for (var L = 0; L < lines.length; L++) {
