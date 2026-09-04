@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v19: much wider scene stills (subject ~5-10% of frame); CTA h2 keep-all wrap fix; scene-3 mobile fit fix; desktop bg = contain (no cover zoom) */
+  /* v20: desktop bg back to cover anchored bottom (no letterbox side bars); text anchor locked against iOS URL-bar scroll drift */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -42,19 +42,20 @@
      bg5 (decision/夕日) ← scene-sunset.jpg (tiny van silhouette under vast sunset sky)
      bg6 (CTA) ← scene-dusk.jpg (tiny warm-lit van window in blue-hour vastness)
   */
-  #bg1 { background-image: url("scene-morning.jpg?v=19"); }
-  #bg2 { background-image: url("scene-travel.jpg?v=19"); }
-  #bg3 { background-image: url("scene-community.jpg?v=19"); }
-  #bg4 { background-image: url("scene-work.jpg?v=19"); }
-  #bg5 { background-image: url("scene-sunset.jpg?v=19"); }
-  #bg6 { background-image: url("scene-dusk.jpg?v=19"); }
+  #bg1 { background-image: url("scene-morning.jpg?v=20"); }
+  #bg2 { background-image: url("scene-travel.jpg?v=20"); }
+  #bg3 { background-image: url("scene-community.jpg?v=20"); }
+  #bg4 { background-image: url("scene-work.jpg?v=20"); }
+  #bg5 { background-image: url("scene-sunset.jpg?v=20"); }
+  #bg6 { background-image: url("scene-dusk.jpg?v=20"); }
   #glyph-canvas {
     position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    top: 0;
+    left: 0;
     z-index: 2;
     pointer-events: none;
+    /* sized in explicit px by particles.js, never stretched by CSS —
+       keeps the text anchor fixed when the iOS URL bar shows/hides */
   }
   .content { position: relative; z-index: 3; }
   section.beat {
@@ -166,9 +167,10 @@
       letter-spacing: .12em;
       line-height: 2;
     }
-    /* Portrait stills on wide screens: cover zooms massively (only ~1/3 of the frame visible).
-       contain shows the whole composition; side letterbox falls back to the dark bg color. */
-    .bg { background-size: contain; }
+    /* Portrait stills on wide screens: cover fills edge-to-edge (no letterbox bars);
+       anchor to the bottom so the lower portion of the scene stays in frame
+       instead of magnifying the middle of the mountain. */
+    .bg { background-position: center bottom; }
   }
   /* Ken Burns animation - reduced scale for less crop */
   @keyframes kenburns {
@@ -177,6 +179,10 @@
   }
   .bg {
     transform-origin: center center;
+  }
+  @media (min-width: 769px) {
+    /* Ken Burns zoom grows from the bottom edge too, preserving the desktop crop */
+    .bg { transform-origin: center bottom; }
   }
   .bg.kb-active {
     animation: kenburns 14s ease-out forwards;
@@ -253,6 +259,6 @@
       </div>
     </section>
   </div>
-<script src="particles.js?v=19"></script>
+<script src="particles.js?v=20"></script>
 </body>
 </html>
