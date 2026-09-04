@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v16: canvas glyph particles; no 座布団 plate; text stays viewport-fixed */
+  /* v17: canvas glyph particles + solid text crossfade; no 座布団 plate; text stays viewport-fixed */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -42,12 +42,12 @@
      bg5 (decision/夕日) ← scene-sunset.jpg (van at ocean sunset)
      bg6 (CTA) ← scene-6.jpg (dusk/calm)
   */
-  #bg1 { background-image: url("scene-5.jpg?v=16"); }
-  #bg2 { background-image: url("scene-2.jpg?v=16"); }
-  #bg3 { background-image: url("scene-community.jpg?v=16"); }
-  #bg4 { background-image: url("scene-4.jpg?v=16"); }
-  #bg5 { background-image: url("scene-sunset.jpg?v=16"); }
-  #bg6 { background-image: url("scene-6.jpg?v=16"); }
+  #bg1 { background-image: url("scene-5.jpg?v=17"); }
+  #bg2 { background-image: url("scene-2.jpg?v=17"); }
+  #bg3 { background-image: url("scene-community.jpg?v=17"); }
+  #bg4 { background-image: url("scene-4.jpg?v=17"); }
+  #bg5 { background-image: url("scene-sunset.jpg?v=17"); }
+  #bg6 { background-image: url("scene-6.jpg?v=17"); }
   #glyph-canvas {
     position: fixed;
     inset: 0;
@@ -73,6 +73,8 @@
     line-height: 2.2;
     font-size: clamp(1.7rem, 5.4vw, 2.75rem);
     text-align: center;
+    word-break: keep-all;
+    overflow-wrap: break-word;
     text-shadow:
       0 2px 22px rgba(0,0,0,.95),
       0 1px 4px rgba(0,0,0,.95),
@@ -83,6 +85,9 @@
   .lines .em {
     font-size: 1.12em;
     font-weight: 500;
+  }
+  .lines .em.coral {
+    color: #FF7F6A;
   }
   body.particles-ready .beat .lines {
     visibility: hidden;
@@ -100,7 +105,12 @@
     padding: 4rem 1.5rem 6rem;
     text-align: center;
   }
-  .cta-inner { width: 100%; max-width: 28rem; }
+  .cta-inner {
+    width: 100%; max-width: 28rem;
+    opacity: 0;
+    transition: opacity 0.9s ease-out;
+  }
+  .cta-inner.visible { opacity: 1; }
   .eyebrow { color: rgba(255,255,255,.65); font-size: .8rem; letter-spacing: .2em; margin-bottom: 1rem; }
   .cta h2 {
     font-family: "Noto Serif JP", serif;
@@ -147,10 +157,10 @@
       line-height: 2;
     }
   }
-  /* Ken Burns animation */
+  /* Ken Burns animation - reduced scale for less crop */
   @keyframes kenburns {
     0% { transform: scale(1); }
-    100% { transform: scale(1.06); }
+    100% { transform: scale(1.03); }
   }
   .bg {
     transform-origin: center center;
@@ -206,7 +216,7 @@
     </section>
     <section class="beat" data-scene="5">
       <div class="lines">
-        <p>いつかじゃない。<br><span class="em">今日、変わろう。</span></p>
+        <p>いつかじゃない。<br><span class="em coral">今日、変わろう。</span></p>
       </div>
     </section>
     <section class="cta" data-scene="6">
@@ -221,7 +231,7 @@
           <p class="hint">※ いつでも配信解除できます</p>
         </form>
         <footer>
-          <p>© たっちゃん</p>
+          <p>© 株式会社ラフレンダリング</p>
           <p class="legal-links">
             <a href="https://utage-system.com/p/VWl7E9xCqsUQ" target="_blank" rel="noopener">特定商取引法に基づく表記</a>
             <a href="https://utage-system.com/p/9iPhkFUE9cUo" target="_blank" rel="noopener">プライバシーポリシー</a>
@@ -230,6 +240,6 @@
       </div>
     </section>
   </div>
-<script src="particles.js?v=16"></script>
+<script src="particles.js?v=17"></script>
 </body>
 </html>

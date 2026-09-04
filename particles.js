@@ -1,4 +1,4 @@
-/* v16: glyph-sampled canvas particles (iOS Safari / Chrome) */
+/* v17: glyph-sampled canvas particles + solid text crossfade at hold */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -10,6 +10,9 @@
     document.getElementById("bg5"),
     document.getElementById("bg6")
   ];
+
+  var CORAL_COLOR = "#FF7F6A";
+  var CORAL_RGB = "255,127,106";
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function ease(t) { return t * t * (3 - 2 * t); }
@@ -28,6 +31,17 @@
     if (n >= 0.06) return 1;
     if (n > -0.14) return ease((n + 0.14) / 0.20);
     return 0;
+  }
+
+  function solidTextAlpha(t) {
+    if (t < 0.82) return 0;
+    return ease((t - 0.82) / 0.18);
+  }
+
+  function particleFadeOut(t) {
+    if (t < 0.75) return 1;
+    if (t > 0.95) return 0;
+    return 1 - ease((t - 0.75) / 0.20);
   }
 
   function isDesktop() { return window.innerWidth >= 769; }
@@ -54,6 +68,8 @@
     document.querySelectorAll("section.beat").forEach(function (sec) {
       var p = sec.querySelector(".lines p");
       if (!p) return;
+      var sceneNum = Number(sec.getAttribute("data-scene")) || 0;
+      var useCoral = sceneNum === 5;
       var lines = [[]];
       function pushRun(text, em) {
         if (!text) return;
@@ -77,7 +93,7 @@
       lines = lines.filter(function (line) {
         return line.some(function (run) { return /[^\s]/.test(run.text); });
       });
-      messages.push({ section: sec, lines: lines, particles: [] });
+      messages.push({ section: sec, lines: lines, particles: [], useCoral: useCoral });
     });
     return messages;
   }
@@ -110,7 +126,19 @@
   }
 
   if (reduceMotion) {
-    function onBg() { tickBackgrounds(); }
+    var ctaInnerRm = document.querySelector(".cta-inner");
+    function onBg() {
+      tickBackgrounds();
+      if (ctaInnerRm) {
+        var ctaRm = document.querySelector("section.cta");
+        if (ctaRm) {
+          var crRm = ctaRm.getBoundingClientRect();
+          var visRm = crRm.top < window.innerHeight * 0.55 && crRm.bottom > window.innerHeight * 0.35;
+          if (visRm) ctaInnerRm.classList.add("visible");
+          else ctaInnerRm.classList.remove("visible");
+        }
+      }
+    }
     window.addEventListener("scroll", onBg, { passive: true });
     window.addEventListener("resize", onBg);
     onBg();
@@ -138,6 +166,7 @@
   }
   var spriteLight = makeSprite("255,248,236");
   var spriteGold = makeSprite("255,214,160");
+  var spriteCoral = makeSprite(CORAL_RGB);
   var spriteDark = makeSprite("10,8,6");
 
   function makeParticle(hx, hy, a, em, spread) {
@@ -217,6 +246,7 @@
     var probe = document.createElement("canvas");
     var pctx = probe.getContext("2d", { willReadFrequently: true });
     var maxLineW = 0;
+    var useCoral = msg.useCoral;
     var measured = msg.lines.map(function (runs) {
       var m = measureLine(pctx, runs, fs, track);
       if (m.width > maxLineW) maxLineW = m.width;
@@ -233,12 +263,13 @@
     pctx.textAlign = "left";
     pctx.textBaseline = "middle";
 
+    var emColor = useCoral ? CORAL_COLOR : "#ffcc80";
     measured.forEach(function (m, li) {
       var x = (w - m.width) / 2;
       var y = pad + lineH * li + lineH / 2;
       m.glyphs.forEach(function (g) {
         pctx.font = g.weight + " " + g.size + "px \"Noto Serif JP\", \"Hiragino Mincho ProN\", serif";
-        pctx.fillStyle = g.em ? "#ffcc80" : "#ffffff";
+        pctx.fillStyle = g.em ? emColor : "#ffffff";
         pctx.fillText(g.ch, x, y);
         x += g.w + g.tr;
       });
@@ -295,7 +326,33 @@
       extra++;
     }
     msg.particles = particles;
-    msg.metrics = { w: w, h: h, fs: fs, count: particles.length };
+    msg.metrics = { w: w, h: h, fs: fs, count: particles.length, ox: ox, oy: oy };
+
+    var solid = document.createElement("canvas");
+    solid.width = probe.width;
+    solid.height = probe.height;
+    var sctx = solid.getContext("2d");
+    sctx.setTransform(localDpr, 0, 0, localDpr, 0, 0);
+    sctx.textAlign = "left";
+    sctx.textBaseline = "middle";
+    sctx.shadowColor = "rgba(0,0,0,0.85)";
+    sctx.shadowBlur = 18;
+    sctx.shadowOffsetY = 2;
+    measured.forEach(function (m, li) {
+      var x = (w - m.width) / 2;
+      var y = pad + lineH * li + lineH / 2;
+      m.glyphs.forEach(function (g) {
+        sctx.font = g.weight + " " + g.size + "px \"Noto Serif JP\", \"Hiragino Mincho ProN\", serif";
+        sctx.fillStyle = g.em ? emColor : "#ffffff";
+        sctx.fillText(g.ch, x, y);
+        x += g.w + g.tr;
+      });
+    });
+    msg.solidCanvas = solid;
+    msg.solidW = w;
+    msg.solidH = h;
+    msg.solidDpr = localDpr;
+    msg.useCoral = useCoral;
   }
 
   function rebuild() {
@@ -343,8 +400,11 @@
       var pts = msg.particles;
       var delaySpan = 0.78;
 
-      if (t > 0.22) {
-        ctx.globalAlpha = 0.22 * fade;
+      var pFade = particleFadeOut(t);
+      var emSprite = msg.useCoral ? spriteCoral : spriteGold;
+
+      if (t > 0.22 && pFade > 0.01) {
+        ctx.globalAlpha = 0.22 * fade * pFade;
         for (var d = 0; d < pts.length; d++) {
           var dp = pts[d];
           var ld = ease(clamp((t - dp.delay) / delaySpan, 0, 1));
@@ -355,21 +415,38 @@
         }
       }
 
-      for (var i = 0; i < pts.length; i++) {
-        var p = pts[i];
-        var local = ease(clamp((t - p.delay) / delaySpan, 0, 1));
-        var xy = particleXY(p, local, fromBelow, now);
-        var size = p.size * (0.72 + 0.55 * local);
-        ctx.globalAlpha = (0.38 + 0.62 * local) * p.a * p.shade * fade;
-        ctx.drawImage(p.em ? spriteGold : spriteLight, xy.x - size * 0.5, xy.y - size * 0.5, size, size);
+      if (pFade > 0.01) {
+        for (var i = 0; i < pts.length; i++) {
+          var p = pts[i];
+          var local = ease(clamp((t - p.delay) / delaySpan, 0, 1));
+          var xy = particleXY(p, local, fromBelow, now);
+          var size = p.size * (0.72 + 0.55 * local);
+          ctx.globalAlpha = (0.38 + 0.62 * local) * p.a * p.shade * fade * pFade;
+          ctx.drawImage(p.em ? emSprite : spriteLight, xy.x - size * 0.5, xy.y - size * 0.5, size, size);
+        }
       }
+
+      var solidAlpha = solidTextAlpha(t) * fade;
+      if (solidAlpha > 0.01 && msg.solidCanvas) {
+        ctx.globalAlpha = solidAlpha;
+        var ox = msg.metrics.ox;
+        var oy = msg.metrics.oy;
+        ctx.drawImage(msg.solidCanvas, ox, oy, msg.solidW, msg.solidH);
+      }
+
       ctx.globalAlpha = 1;
     }
 
     var cta = document.querySelector("section.cta");
+    var ctaInner = cta ? cta.querySelector(".cta-inner") : null;
     if (cta) {
       var cr = cta.getBoundingClientRect();
-      if (cr.top < vh * 0.55 && cr.bottom > vh * 0.35) active = 6;
+      var ctaVisible = cr.top < vh * 0.55 && cr.bottom > vh * 0.35;
+      if (ctaVisible) active = 6;
+      if (ctaInner) {
+        if (ctaVisible) ctaInner.classList.add("visible");
+        else ctaInner.classList.remove("visible");
+      }
     }
     setActiveBg(active);
   }
