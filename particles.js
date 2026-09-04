@@ -1,4 +1,4 @@
-/* v21: glyph-sampled canvas particles + solid text crossfade at hold; desktop telop size bumped with fit-to-width guard */
+/* v21: desktop telop size bumped (~+29%); v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -11,8 +11,8 @@
     document.getElementById("bg6")
   ];
 
-  var CORAL_COLOR = "#FF7F6A";
-  var CORAL_RGB = "255,127,106";
+  var EM_COLOR = "#7DFFB2";
+  var EM_RGB = "125,255,178";
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function ease(t) { return t * t * (3 - 2 * t); }
@@ -54,11 +54,12 @@
 
   function trackingEm() { return isDesktop() ? 0.12 : 0.07; }
 
+  // Layout viewport only. visualViewport shrinks/grows on iOS during scroll
+  // (URL bar) and pinch-zoom; anchoring text to it makes the glyph field drift.
   function viewSize() {
-    var vv = window.visualViewport;
     return {
-      w: Math.max(1, (vv && vv.width) || window.innerWidth || 1),
-      h: Math.max(1, (vv && vv.height) || window.innerHeight || 1)
+      w: Math.max(1, window.innerWidth || 1),
+      h: Math.max(1, window.innerHeight || 1)
     };
   }
 
@@ -69,7 +70,7 @@
       var p = sec.querySelector(".lines p");
       if (!p) return;
       var sceneNum = Number(sec.getAttribute("data-scene")) || 0;
-      var useCoral = sceneNum === 5;
+      var useEm = sceneNum === 5;
       var lines = [[]];
       function pushRun(text, em) {
         if (!text) return;
@@ -93,7 +94,7 @@
       lines = lines.filter(function (line) {
         return line.some(function (run) { return /[^\s]/.test(run.text); });
       });
-      messages.push({ section: sec, lines: lines, particles: [], useCoral: useCoral });
+      messages.push({ section: sec, lines: lines, particles: [], useEm: useEm });
     });
     return messages;
   }
@@ -158,16 +159,16 @@
     var c = s.getContext("2d");
     var g = c.createRadialGradient(5, 5, 0, 5, 5, 5);
     g.addColorStop(0, "rgba(" + rgb + ",1)");
-    g.addColorStop(0.38, "rgba(" + rgb + ",0.88)");
+    g.addColorStop(0.22, "rgba(" + rgb + ",0.62)");
+    g.addColorStop(0.55, "rgba(" + rgb + ",0.20)");
     g.addColorStop(1, "rgba(" + rgb + ",0)");
     c.fillStyle = g;
     c.fillRect(0, 0, 10, 10);
     return s;
   }
-  var spriteLight = makeSprite("255,248,236");
-  var spriteGold = makeSprite("255,214,160");
-  var spriteCoral = makeSprite(CORAL_RGB);
-  var spriteDark = makeSprite("10,8,6");
+  var spriteLight = makeSprite("255,250,240");
+  var spriteGold = makeSprite("255,216,170");
+  var spriteEm = makeSprite(EM_RGB);
 
   function makeParticle(hx, hy, a, em, spread) {
     var seed = Math.random();
@@ -242,35 +243,27 @@
   function sampleMessage(msg) {
     var fs = fontSizePx();
     var track = trackingEm();
-    var lineH = fs * 2;
     var probe = document.createElement("canvas");
     var pctx = probe.getContext("2d", { willReadFrequently: true });
+    var useEm = msg.useEm;
+    // Fit-to-width: shrink fs until the longest line fits inside vw*0.96 including padding,
+    // so long lines (e.g. scene 3 「ひとりでつくるものじゃない。」) never clip left/right on phones.
     var maxLineW = 0;
-    var useCoral = msg.useCoral;
-    function measureAll() {
-      var maxW = 0;
-      var list = msg.lines.map(function (runs) {
+    var measured = [];
+    var pad = 28;
+    for (var fit = 0; fit < 5; fit++) {
+      maxLineW = 0;
+      measured = msg.lines.map(function (runs) {
         var m = measureLine(pctx, runs, fs, track);
-        if (m.width > maxW) maxW = m.width;
+        if (m.width > maxLineW) maxLineW = m.width;
         return m;
       });
-      return { list: list, maxW: maxW };
+      pad = Math.max(28, fs);
+      var avail = vw * 0.96 - pad * 2;
+      if (maxLineW <= avail || fs <= 13) break;
+      fs = Math.max(13, fs * (avail / maxLineW) * 0.985);
     }
-    var r = measureAll();
-    var measured = r.list;
-    maxLineW = r.maxW;
-    var pad = Math.max(28, fs);
-    if (vw >= 769 && maxLineW > 0) {
-      var availW = vw * 0.96 - pad * 2;
-      if (maxLineW > availW) {
-        fs = Math.max(24, fs * (availW / maxLineW));
-        lineH = fs * 2;
-        pad = Math.max(28, fs);
-        r = measureAll();
-        measured = r.list;
-        maxLineW = r.maxW;
-      }
-    }
+    var lineH = fs * 2;
     var w = Math.ceil(Math.min(vw * 0.96, maxLineW + pad * 2));
     var h = Math.ceil(msg.lines.length * lineH + pad * 2);
     var localDpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -281,7 +274,7 @@
     pctx.textAlign = "left";
     pctx.textBaseline = "middle";
 
-    var emColor = useCoral ? CORAL_COLOR : "#ffcc80";
+    var emColor = useEm ? EM_COLOR : "#ffcc80";
     measured.forEach(function (m, li) {
       var x = (w - m.width) / 2;
       var y = pad + lineH * li + lineH / 2;
@@ -355,7 +348,9 @@
     sctx.textBaseline = "middle";
     sctx.shadowColor = "rgba(0,0,0,0.85)";
     sctx.shadowBlur = 18;
-    sctx.shadowOffsetY = 2;
+    // no Y offset: the solid phase must land exactly on the particle home
+    // positions, otherwise the text appears to settle downward at crossfade
+    sctx.shadowOffsetY = 0;
     measured.forEach(function (m, li) {
       var x = (w - m.width) / 2;
       var y = pad + lineH * li + lineH / 2;
@@ -370,7 +365,7 @@
     msg.solidW = w;
     msg.solidH = h;
     msg.solidDpr = localDpr;
-    msg.useCoral = useCoral;
+    msg.useEm = useEm;
   }
 
   function rebuild() {
@@ -398,10 +393,9 @@
   function draw() {
     var now = performance.now();
     ctx.clearRect(0, 0, vw, vh);
-    var vs = viewSize();
-    if (Math.abs(vs.w - vw) > 2 || Math.abs(vs.h - vh) > 2) {
-      rebuild();
-    }
+    // No per-frame viewport polling here: vw/vh stay at the values captured by the
+    // last (debounced, width-guarded) rebuild, so the text anchor cannot drift
+    // between scroll frames.
 
     var active = 1;
     for (var m = 0; m < messages.length; m++) {
@@ -419,29 +413,19 @@
       var delaySpan = 0.78;
 
       var pFade = particleFadeOut(t);
-      var emSprite = msg.useCoral ? spriteCoral : spriteGold;
-
-      if (t > 0.22 && pFade > 0.01) {
-        ctx.globalAlpha = 0.22 * fade * pFade;
-        for (var d = 0; d < pts.length; d++) {
-          var dp = pts[d];
-          var ld = ease(clamp((t - dp.delay) / delaySpan, 0, 1));
-          if (ld < 0.20) continue;
-          var dxy = particleXY(dp, ld, fromBelow, now);
-          var ds = dp.size * (1.15 + 0.55 * ld);
-          ctx.drawImage(spriteDark, dxy.x - ds * 0.5, dxy.y - ds * 0.5, ds * 1.35, ds * 1.35);
-        }
-      }
+      var emSprite = msg.useEm ? spriteEm : spriteGold;
 
       if (pFade > 0.01) {
+        ctx.globalCompositeOperation = "lighter";
         for (var i = 0; i < pts.length; i++) {
           var p = pts[i];
           var local = ease(clamp((t - p.delay) / delaySpan, 0, 1));
           var xy = particleXY(p, local, fromBelow, now);
-          var size = p.size * (0.72 + 0.55 * local);
-          ctx.globalAlpha = (0.38 + 0.62 * local) * p.a * p.shade * fade * pFade;
+          var size = p.size * (0.9 + 0.7 * local);
+          ctx.globalAlpha = (0.30 + 0.58 * local) * p.a * p.shade * fade * pFade;
           ctx.drawImage(p.em ? emSprite : spriteLight, xy.x - size * 0.5, xy.y - size * 0.5, size, size);
         }
+        ctx.globalCompositeOperation = "source-over";
       }
 
       var solidAlpha = solidTextAlpha(t) * fade;
@@ -496,10 +480,17 @@
     }
   }
 
-  window.addEventListener("resize", scheduleRebuild);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", scheduleRebuild);
+  // iOS Safari fires resize on scroll while the URL bar shows/hides (height-only
+  // change). Rebuilding then re-randomizes the particle field and re-anchors the
+  // text, which reads as a visible jump. Rebuild only on width change (rotation /
+  // genuine resize); on desktop there is no collapsing URL bar, so height-only
+  // changes rebuild too and keep the text centered.
+  function onViewportResize() {
+    var w = window.innerWidth || 1;
+    var h = window.innerHeight || 1;
+    if (Math.abs(w - vw) > 2 || (w >= 769 && Math.abs(h - vh) > 2)) scheduleRebuild();
   }
+  window.addEventListener("resize", onViewportResize);
   document.addEventListener("visibilitychange", function () {
     running = document.visibilityState !== "hidden";
     if (running) requestAnimationFrame(loop);

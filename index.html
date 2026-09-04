@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v21: canvas glyph particles + solid text crossfade; no 座布団 plate; text stays viewport-fixed; desktop telops enlarged */
+  /* v21: desktop telops enlarged (~+29%); v20: desktop bg cover anchored bottom, text anchor locked against iOS URL-bar scroll drift */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -34,27 +34,28 @@
     background: linear-gradient(180deg, rgba(8,8,10,.06) 0%, rgba(8,8,10,.12) 30%, transparent 50%),
                 linear-gradient(to top, rgba(8,8,10,.55) 0%, rgba(8,8,10,.22) 40%, transparent 70%);
   }
-  /* Background mapping (v16):
-     bg1 (morning wake) ← scene-5.jpg (dawn coffee)
-     bg2 (travel/freedom) ← scene-2.jpg (coastal road)
-     bg3 (community/仲間) ← scene-community.jpg (group working by lake)
-     bg4 (work+life) ← scene-4.jpg (laptop/work)
-     bg5 (decision/夕日) ← scene-sunset.jpg (van at ocean sunset)
-     bg6 (CTA) ← scene-6.jpg (dusk/calm)
+  /* Background mapping (v18): all stills regenerated as wide, pulled-back compositions
+     bg1 (morning wake) ← scene-morning.jpg (tiny van + figure on vast misty dawn lake)
+     bg2 (travel/freedom) ← scene-travel.jpg (tiny van on sweeping coastal road)
+     bg3 (community/仲間) ← scene-community.jpg (distant campfire group by dusk lake)
+     bg4 (work+life) ← scene-work.jpg (tiny laptop table + van in huge mountain valley)
+     bg5 (decision/夕日) ← scene-sunset.jpg (tiny van silhouette under vast sunset sky)
+     bg6 (CTA) ← scene-dusk.jpg (tiny warm-lit van window in blue-hour vastness)
   */
-  #bg1 { background-image: url("scene-5.jpg?v=21"); }
-  #bg2 { background-image: url("scene-2.jpg?v=21"); }
+  #bg1 { background-image: url("scene-morning.jpg?v=21"); }
+  #bg2 { background-image: url("scene-travel.jpg?v=21"); }
   #bg3 { background-image: url("scene-community.jpg?v=21"); }
-  #bg4 { background-image: url("scene-4.jpg?v=21"); }
+  #bg4 { background-image: url("scene-work.jpg?v=21"); }
   #bg5 { background-image: url("scene-sunset.jpg?v=21"); }
-  #bg6 { background-image: url("scene-6.jpg?v=21"); }
+  #bg6 { background-image: url("scene-dusk.jpg?v=21"); }
   #glyph-canvas {
     position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    top: 0;
+    left: 0;
     z-index: 2;
     pointer-events: none;
+    /* sized in explicit px by particles.js, never stretched by CSS —
+       keeps the text anchor fixed when the iOS URL bar shows/hides */
   }
   .content { position: relative; z-index: 3; }
   section.beat {
@@ -86,8 +87,13 @@
     font-size: 1.12em;
     font-weight: 500;
   }
-  .lines .em.coral {
-    color: #FF7F6A;
+  .lines .em.mint {
+    color: #7DFFB2;
+    text-shadow:
+      0 2px 22px rgba(0,0,0,.95),
+      0 1px 4px rgba(0,0,0,.95),
+      0 0 32px rgba(0,0,0,.7),
+      0 0 26px rgba(125,255,178,.35);
   }
   body.particles-ready .beat .lines {
     visibility: hidden;
@@ -106,7 +112,7 @@
     text-align: center;
   }
   .cta-inner {
-    width: 100%; max-width: 28rem;
+    width: 100%; max-width: 30rem;
     opacity: 0;
     transition: opacity 0.9s ease-out;
   }
@@ -115,8 +121,10 @@
   .cta h2 {
     font-family: "Noto Serif JP", serif;
     font-weight: 400;
-    font-size: clamp(1.9rem, 5vw, 2.6rem);
-    letter-spacing: .14em;
+    /* sized so 「場所に縛られない働き方を、」 (13 chars) fits one line down to 320px without mid-word breaks */
+    font-size: clamp(1.35rem, 5.6vw, 2rem);
+    letter-spacing: .1em;
+    word-break: keep-all;
     margin-bottom: 1.2rem;
   }
   .cta .lead { color: rgba(255,255,255,.85); font-size: 1.05rem; line-height: 1.9; margin-bottom: 2rem; }
@@ -146,8 +154,11 @@
   /* Mobile (default): compact short lines */
   @media (max-width: 768px) {
     .lines { letter-spacing: .07em; line-height: 2; font-size: clamp(1.55rem, 6.4vw, 2.15rem); }
+    /* Scene 3's em line 「ひとりでつくるものじゃない。」 (14 chars) overflows ~390px viewports:
+       shrink + tighten so the full line fits (fallback for reduced-motion / pre-paint) */
+    section[data-scene="3"] .lines { font-size: clamp(1.05rem, 5.2vw, 2rem); letter-spacing: .04em; }
   }
-  /* Desktop: wider layout, larger type, fewer breaks (v21: telops ~+25-30% vs v17) */
+  /* Desktop: wider layout, larger type, fewer breaks (v21: telops ~+25-30%) */
   @media (min-width: 769px) {
     br.sp { display: none; }
     .lines {
@@ -156,9 +167,15 @@
       letter-spacing: .12em;
       line-height: 2;
     }
-    .cta-inner { max-width: 44rem; }
-    .cta h2 { font-size: clamp(2.4rem, 4.2vw, 3.4rem); }
-    .cta form, .cta footer { max-width: 28rem; margin-inline: auto; }
+    /* Portrait stills on wide screens: cover fills edge-to-edge (no letterbox bars);
+       anchor to the bottom so the lower portion of the scene stays in frame
+       instead of magnifying the middle of the mountain. */
+    .bg { background-position: center bottom; }
+    /* v21: larger CTA heading on desktop; wider inner column so the keep-all
+       h2 line fits, while the UTAGE form and footer keep their 30rem width */
+    .cta-inner { max-width: 40rem; }
+    .cta h2 { font-size: clamp(2rem, 3.2vw, 2.6rem); }
+    .cta form, .cta footer { max-width: 30rem; margin-inline: auto; }
   }
   /* Ken Burns animation - reduced scale for less crop */
   @keyframes kenburns {
@@ -167,6 +184,10 @@
   }
   .bg {
     transform-origin: center center;
+  }
+  @media (min-width: 769px) {
+    /* Ken Burns zoom grows from the bottom edge too, preserving the desktop crop */
+    .bg { transform-origin: center bottom; }
   }
   .bg.kb-active {
     animation: kenburns 14s ease-out forwards;
@@ -219,13 +240,13 @@
     </section>
     <section class="beat" data-scene="5">
       <div class="lines">
-        <p>いつかじゃない。<br><span class="em coral">今日、変わろう。</span></p>
+        <p>いつかじゃない。<br><span class="em mint">今日、変わろう。</span></p>
       </div>
     </section>
     <section class="cta" data-scene="6">
       <div class="cta-inner">
         <p class="eyebrow">期間限定・無料セミナー</p>
-        <h2>場所に縛られない働き方を、<br class="sp">ここから。</h2>
+        <h2>場所に縛られない働き方を、<br>ここから。</h2>
         <p class="lead">自由な暮らしを始めるために、<br class="sp">最初に整えるべき環境と具体的なステップを、<br class="sp">無料セミナーでお伝えします。</p>
         <form id="form" action="https://utage-system.com/r/nLIjbJDSiDdp/store" method="post">
           <input type="hidden" name="redirect_url" value="https://utage-system.com/p/ithxISVdorRw">
