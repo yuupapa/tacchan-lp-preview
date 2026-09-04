@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v18: luminous light-mote particles + solid text crossfade; wider pulled-back scene stills; mint em for scene 5 */
+  /* v19: much wider scene stills (subject ~5-10% of frame); CTA h2 keep-all wrap fix; scene-3 mobile fit fix; desktop bg = contain (no cover zoom) */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -42,12 +42,12 @@
      bg5 (decision/夕日) ← scene-sunset.jpg (tiny van silhouette under vast sunset sky)
      bg6 (CTA) ← scene-dusk.jpg (tiny warm-lit van window in blue-hour vastness)
   */
-  #bg1 { background-image: url("scene-morning.jpg?v=18"); }
-  #bg2 { background-image: url("scene-travel.jpg?v=18"); }
-  #bg3 { background-image: url("scene-community.jpg?v=18"); }
-  #bg4 { background-image: url("scene-work.jpg?v=18"); }
-  #bg5 { background-image: url("scene-sunset.jpg?v=18"); }
-  #bg6 { background-image: url("scene-dusk.jpg?v=18"); }
+  #bg1 { background-image: url("scene-morning.jpg?v=19"); }
+  #bg2 { background-image: url("scene-travel.jpg?v=19"); }
+  #bg3 { background-image: url("scene-community.jpg?v=19"); }
+  #bg4 { background-image: url("scene-work.jpg?v=19"); }
+  #bg5 { background-image: url("scene-sunset.jpg?v=19"); }
+  #bg6 { background-image: url("scene-dusk.jpg?v=19"); }
   #glyph-canvas {
     position: fixed;
     inset: 0;
@@ -111,7 +111,7 @@
     text-align: center;
   }
   .cta-inner {
-    width: 100%; max-width: 28rem;
+    width: 100%; max-width: 30rem;
     opacity: 0;
     transition: opacity 0.9s ease-out;
   }
@@ -120,8 +120,10 @@
   .cta h2 {
     font-family: "Noto Serif JP", serif;
     font-weight: 400;
-    font-size: clamp(1.9rem, 5vw, 2.6rem);
-    letter-spacing: .14em;
+    /* sized so 「場所に縛られない働き方を、」 (13 chars) fits one line down to 320px without mid-word breaks */
+    font-size: clamp(1.35rem, 5.6vw, 2rem);
+    letter-spacing: .1em;
+    word-break: keep-all;
     margin-bottom: 1.2rem;
   }
   .cta .lead { color: rgba(255,255,255,.85); font-size: 1.05rem; line-height: 1.9; margin-bottom: 2rem; }
@@ -151,6 +153,9 @@
   /* Mobile (default): compact short lines */
   @media (max-width: 768px) {
     .lines { letter-spacing: .07em; line-height: 2; font-size: clamp(1.55rem, 6.4vw, 2.15rem); }
+    /* Scene 3's em line 「ひとりでつくるものじゃない。」 (14 chars) overflows ~390px viewports:
+       shrink + tighten so the full line fits (fallback for reduced-motion / pre-paint) */
+    section[data-scene="3"] .lines { font-size: clamp(1.05rem, 5.2vw, 2rem); letter-spacing: .04em; }
   }
   /* Desktop: wider layout, larger type, fewer breaks */
   @media (min-width: 769px) {
@@ -161,6 +166,9 @@
       letter-spacing: .12em;
       line-height: 2;
     }
+    /* Portrait stills on wide screens: cover zooms massively (only ~1/3 of the frame visible).
+       contain shows the whole composition; side letterbox falls back to the dark bg color. */
+    .bg { background-size: contain; }
   }
   /* Ken Burns animation - reduced scale for less crop */
   @keyframes kenburns {
@@ -227,7 +235,7 @@
     <section class="cta" data-scene="6">
       <div class="cta-inner">
         <p class="eyebrow">期間限定・無料セミナー</p>
-        <h2>場所に縛られない働き方を、<br class="sp">ここから。</h2>
+        <h2>場所に縛られない働き方を、<br>ここから。</h2>
         <p class="lead">自由な暮らしを始めるために、<br class="sp">最初に整えるべき環境と具体的なステップを、<br class="sp">無料セミナーでお伝えします。</p>
         <form id="form" action="https://utage-system.com/r/nLIjbJDSiDdp/store" method="post">
           <input type="hidden" name="redirect_url" value="https://utage-system.com/p/ithxISVdorRw">
@@ -245,6 +253,6 @@
       </div>
     </section>
   </div>
-<script src="particles.js?v=18"></script>
+<script src="particles.js?v=19"></script>
 </body>
 </html>

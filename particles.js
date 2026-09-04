@@ -1,4 +1,4 @@
-/* v18: glyph-sampled luminous light-mote particles (additive glow, no dark underlay) + solid text crossfade at hold */
+/* v19: glyph-sampled luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip on phones */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -242,17 +242,27 @@
   function sampleMessage(msg) {
     var fs = fontSizePx();
     var track = trackingEm();
-    var lineH = fs * 2;
     var probe = document.createElement("canvas");
     var pctx = probe.getContext("2d", { willReadFrequently: true });
-    var maxLineW = 0;
     var useEm = msg.useEm;
-    var measured = msg.lines.map(function (runs) {
-      var m = measureLine(pctx, runs, fs, track);
-      if (m.width > maxLineW) maxLineW = m.width;
-      return m;
-    });
-    var pad = Math.max(28, fs);
+    // Fit-to-width: shrink fs until the longest line fits inside vw*0.96 including padding,
+    // so long lines (e.g. scene 3 「ひとりでつくるものじゃない。」) never clip left/right on phones.
+    var maxLineW = 0;
+    var measured = [];
+    var pad = 28;
+    for (var fit = 0; fit < 5; fit++) {
+      maxLineW = 0;
+      measured = msg.lines.map(function (runs) {
+        var m = measureLine(pctx, runs, fs, track);
+        if (m.width > maxLineW) maxLineW = m.width;
+        return m;
+      });
+      pad = Math.max(28, fs);
+      var avail = vw * 0.96 - pad * 2;
+      if (maxLineW <= avail || fs <= 13) break;
+      fs = Math.max(13, fs * (avail / maxLineW) * 0.985);
+    }
+    var lineH = fs * 2;
     var w = Math.ceil(Math.min(vw * 0.96, maxLineW + pad * 2));
     var h = Math.ceil(msg.lines.length * lineH + pad * 2);
     var localDpr = Math.min(window.devicePixelRatio || 1, 2);
