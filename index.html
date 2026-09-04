@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v27: intro and the mid 「ここから。」 heading no longer scroll as document blocks — both are viewport-fixed canvas content with the same gather/hold/dissolve motion as telops (intro text as particles + photo soft-fade, anchored low, beat-2 only; mid heading as particles with its UTAGE form fading in viewport-fixed once assembled). v25: design review fixes — intro strip is tied to beat 2 (fades out before the scene-3 campfire bg takes over, back in on return) instead of staying stuck on; scene-2 telop raised further on phones (lift 0.16) and the intro strip slightly shrunk/lowered so they don't collide at ~390px. v24: mid label 「ここから。」; both form buttons 「無料動画セミナーを今すぐ受け取る」 with play icon, thicker; final receive block (期間限定 / 無料動画セミナーを／今すぐ受け取る / 登録後すぐに案内が届きます) before the form; compact face-less intro strip under the raised scene-2 telop. v23: mid CTA is a full UTAGE email form carrying data-scene="3"; scene 3/4 stills regenerated; title trimmed to 期間限定. v22: locked copy; wide-FOV film stills. v21: desktop telops enlarged (~+29%). v20: desktop bg cover anchored bottom; text anchor locked against iOS URL-bar scroll drift */
+  /* v27: intro and the mid 「ここから。」 heading no longer scroll as document blocks — both are viewport-fixed canvas content with the same gather/hold/dissolve motion as telops (intro text as particles + photo soft-fade drawn on canvas, anchored low, beat-2 only; mid heading as particles with its UTAGE form fading in viewport-fixed once assembled). v26: the たっちゃん intro text and the mid-CTA label 「ここから。」 render as canvas glyph particles with the same gather → hold → dissolve motion as the telops (particles.js); the intro photo soft-fades in sync and the mid form stays clickable (keyboard focus forces it visible). v25: design review fixes — intro strip is tied to beat 2 (fades out before the scene-3 campfire bg takes over, back in on return); scene-2 telop raised further on phones (lift 0.16) and the intro strip slightly shrunk/lowered so they don't collide at ~390px. v24: mid label 「ここから。」; both form buttons with play icon; final receive block before the form; compact intro strip under the raised scene-2 telop. v23: mid CTA is a full UTAGE email form carrying data-scene="3"; scene 3/4 stills regenerated. v22: locked copy; wide-FOV film stills. v21: desktop telops enlarged (~+29%). v20: desktop bg cover anchored bottom; text anchor locked against iOS URL-bar scroll drift */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -102,9 +102,20 @@
     visibility: hidden;
     pointer-events: none;
   }
+  /* v26/v27: intro text + mid-CTA label render as canvas glyph particles
+     (same gather/dissolve as the telops). The body classes are per block, so
+     a block that failed to sample keeps its DOM text as fallback. v27: the
+     whole intro strip is hidden — the photo is drawn on the canvas too — and
+     the mid form becomes viewport-fixed (rules next to .mid-cta below).
+     visibility (not display) keeps the layout the particles were measured
+     against. */
+  body.particles-intro .intro { visibility: hidden; pointer-events: none; }
+  body.particles-mid .mid-cta-label { visibility: hidden; }
   @media (prefers-reduced-motion: reduce) {
     #glyph-canvas { display: none; }
     body.particles-ready .beat .lines { visibility: visible; }
+    body.particles-intro .intro { visibility: visible; }
+    body.particles-mid .mid-cta-label { visibility: visible; }
   }
   .cta {
     min-height: 100svh;
@@ -187,8 +198,7 @@
     margin-bottom: 1.6rem;
     text-shadow: 0 1px 12px rgba(0,0,0,.8);
   }
-  body.mid-fixed .mid-cta-label { visibility: hidden; }
-  body.mid-fixed .mid-cta-inner {
+  body.particles-mid .mid-cta-inner {
     position: fixed;
     left: 50%;
     top: 50%;
@@ -200,7 +210,7 @@
     pointer-events: none;
     transition: opacity .7s ease, transform .7s ease, visibility 0s linear .7s;
   }
-  body.mid-fixed .mid-cta-inner.settled {
+  body.particles-mid .mid-cta-inner.settled {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
@@ -212,7 +222,7 @@
      viewport while beat 2's scroll drives assembleAmount only (dissolved and
      gone before scene 3 takes over). The DOM strip below is now only the
      no-JS / reduced-motion fallback, hidden once the canvas takes over
-     (body.intro-particles). v25: compact face-less profile pinned to the lower
+     (body.particles-intro). v25: compact face-less profile pinned to the lower
      part of scene 2; the telop above it is raised by particles.js (lift);
      body.intro-js arms the IntersectionObserver fade for the fallback. */
   section[data-scene="2"] { position: relative; }
@@ -232,8 +242,8 @@
     transition: opacity 1s ease .15s, transform 1s ease .15s;
   }
   body.intro-js .intro.visible { opacity: 1; transform: translate(-50%, 0); }
-  /* Canvas takes over the intro (v27): hide the DOM strip */
-  body.intro-particles .intro { visibility: hidden; pointer-events: none; }
+  /* Canvas takes over the intro (v27): the DOM strip is hidden via
+     body.particles-intro (rule with the other particle fallbacks above). */
   .intro-photo {
     width: 3rem; height: 3rem;
     border-radius: 50%;

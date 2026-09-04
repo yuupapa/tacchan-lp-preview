@@ -1,14 +1,15 @@
-/* v27: intro and mid-CTA stop scrolling as document blocks — both are now viewport-fixed canvas content with the SAME gather/hold/dissolve motion as telops. Intro text is sampled into light particles (photo soft-fades in beside it), anchored to the lower viewport; beat 2's scroll progress drives assembleAmount only, so it dissolves before scene 3 and never rides a strip past the eye. The mid 「ここから。」 heading is particle text anchored above the form; the UTAGE form itself fades in viewport-fixed (.settled) once the heading assembles. DOM intro strip / mid label remain as no-JS and reduced-motion fallbacks (body.intro-particles / body.mid-fixed gate the takeover). v25: intro strip visibility is tied to beat 2 — the observer root is the lower ~40% of the viewport, so the strip fades out before the scene-3 campfire bg takes over (and back in on return), instead of staying stuck on once shown; scene-2 telop lift raised to 16% vh on phones. v24: scene-2 telop lifted ~12% vh to make room for the compact intro strip below it; intro strip fade-in via IntersectionObserver (no-JS keeps it visible). v23: background activation reads every [data-scene] section (including the mid CTA), so the bg no longer falls back to the morning scene while the mid form is in view. v21: desktop telop size bumped (~+29%); v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
+/* v27: intro and mid-CTA no longer scroll as document blocks — both are viewport-fixed canvas content with the SAME gather/hold/dissolve motion as the telops. Intro text is anchored to the lower viewport with the photo soft-fading beside it on the canvas; beat 2's scroll progress drives assembleAmount only, so it dissolves before scene 3 and never rides a strip past the eye. The mid 「ここから。」 label is particle text anchored above the form; the UTAGE form fades in viewport-fixed (.settled) once the label assembles — keyboard focus forces it visible — and its top is pinned to the locked vh so it cannot drift from the canvas when the iOS URL bar shows/hides. v26 sampling fidelity is kept: computed styles (SANS intro text / SERIF mid label), shared tokenize/paintRuns, per-block fallback classes (particles-intro / particles-mid), per-message maxAlpha/shadowBlur, and the photo's soft-fade curve. v26: the たっちゃん intro text and the mid-CTA label 「ここから。」 run through the SAME canvas glyph-particle pipeline as the telops (gather → hold → dissolve, same curves/sprites); the intro photo soft-fades in sync with the text assembly; per-message body classes keep the DOM text as fallback whenever a block fails to sample. v25: intro strip visibility tied to beat 2 (observer root = lower ~40% of the viewport); scene-2 telop lift raised to 16% vh on phones. v24: scene-2 telop lifted ~12% vh; intro strip fade-in. v23: background activation reads every [data-scene] section. v21: desktop telop size bumped. v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides) */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Intro strip reveal (v25). Armed synchronously before first paint; without
-  // JS the strip simply stays visible (no body.intro-js class is added).
-  // The observer root is shrunk to the lower ~40% of the viewport, so the
+  // Intro strip reveal — fallback for the no-particle path (v25 semantics):
+  // the observer root is shrunk to the lower ~40% of the viewport, so the
   // strip only counts as "visible" while it sits low on screen — i.e. while
-  // beat 2 is the active scene. It fades out as it rises past ~60vh, which
-  // happens before the background switches to the scene-3 campfire (scene 2's
-  // bottom edge crossing 55vh), and fades back in when beat 2 returns.
+  // beat 2 is the active scene — and fades out before the scene-3 campfire
+  // bg takes over. Armed synchronously before first paint; without JS the
+  // strip simply stays visible (no body.intro-js class is added). Under
+  // body.particles-intro the whole strip is hidden and the canvas draws both
+  // text and photo, so this fade never fights the particle loop.
   var introEl = document.querySelector(".intro");
   if (introEl && "IntersectionObserver" in window) {
     document.body.classList.add("intro-js");
@@ -36,6 +37,8 @@
 
   var EM_COLOR = "#7DFFB2";
   var EM_RGB = "125,255,178";
+  var SERIF = "\"Noto Serif JP\", \"Hiragino Mincho ProN\", serif";
+  var SANS = "\"Noto Sans JP\", \"Hiragino Kaku Gothic ProN\", sans-serif";
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function ease(t) { return t * t * (3 - 2 * t); }
@@ -86,109 +89,158 @@
     };
   }
 
-  function parseMessages() {
+  // v26: read the real computed style so the sampled glyphs match the CSS
+  // exactly, even if the stylesheet values change later.
+  function computedFs(el, fallback) {
+    var v = parseFloat(window.getComputedStyle(el).fontSize);
+    return isFinite(v) && v > 0 ? v : fallback;
+  }
+  function computedTrackEm(el, fs, fallback) {
+    var v = parseFloat(window.getComputedStyle(el).letterSpacing);
+    return isFinite(v) && fs > 0 ? v / fs : fallback;
+  }
+  function computedLineHEm(el, fs, fallback) {
+    var v = parseFloat(window.getComputedStyle(el).lineHeight);
+    return isFinite(v) && fs > 0 ? v / fs : fallback;
+  }
+
+  // v26 shared DOM walker: builds lines of styled runs ({text, em, bold}) from
+  // an element's child nodes. <br> starts a new line (desktop hides .sp
+  // breaks); whitespace-only lines are dropped.
+  function tokenize(root, desktop, initEm, initBold) {
+    var lines = [[]];
+    function pushRun(text, em, bold) {
+      if (!text) return;
+      var line = lines[lines.length - 1];
+      var last = line[line.length - 1];
+      if (last && last.em === em && last.bold === bold) last.text += text;
+      else line.push({ text: text, em: !!em, bold: !!bold });
+    }
+    function walk(node, em, bold) {
+      if (node.nodeType === 3) {
+        pushRun(node.textContent, em, bold);
+      } else if (node.nodeName === "BR") {
+        var hide = desktop && node.classList && node.classList.contains("sp");
+        if (!hide) lines.push([]);
+      } else if (node.nodeType === 1) {
+        var nextEm = em || (node.classList && node.classList.contains("em"));
+        var nextBold = bold || (node.classList && node.classList.contains("intro-name"));
+        for (var i = 0; i < node.childNodes.length; i++) walk(node.childNodes[i], nextEm, nextBold);
+      }
+    }
+    for (var i = 0; i < root.childNodes.length; i++) walk(root.childNodes[i], initEm, initBold);
+    return lines.filter(function (line) {
+      return line.some(function (run) { return /[^\s]/.test(run.text); });
+    });
+  }
+
+  function parseTelopMessages() {
     var desktop = isDesktop();
     var messages = [];
     document.querySelectorAll("section.beat").forEach(function (sec) {
       var p = sec.querySelector(".lines p");
       if (!p) return;
       var sceneNum = Number(sec.getAttribute("data-scene")) || 0;
-      var useEm = sceneNum === 5;
-      var lines = [[]];
-      function pushRun(text, em) {
-        if (!text) return;
-        var line = lines[lines.length - 1];
-        var last = line[line.length - 1];
-        if (last && last.em === em) last.text += text;
-        else line.push({ text: text, em: !!em });
-      }
-      function walk(node, em) {
-        if (node.nodeType === 3) {
-          pushRun(node.textContent, em);
-        } else if (node.nodeName === "BR") {
-          var hide = desktop && node.classList && node.classList.contains("sp");
-          if (!hide) lines.push([]);
-        } else if (node.nodeType === 1) {
-          var nextEm = em || (node.classList && node.classList.contains("em"));
-          node.childNodes.forEach(function (child) { walk(child, nextEm); });
-        }
-      }
-      p.childNodes.forEach(function (node) { walk(node, false); });
-      lines = lines.filter(function (line) {
-        return line.some(function (run) { return /[^\s]/.test(run.text); });
-      });
+      var lines = tokenize(p, desktop, false, false);
       // Scene 2 carries the compact intro strip in its lower area, so its
       // telop is lifted above the viewport center to make room. v25: phones
       // lift further (0.16) so the strip never crowds the telop on ~390px
       // screens; desktop keeps the v24 lift.
       var lift = sceneNum === 2 ? (desktop ? 0.12 : 0.16) : 0;
-      messages.push({ section: sec, lines: lines, particles: [], useEm: useEm, lift: lift });
+      messages.push({
+        progressEl: sec,
+        lines: lines,
+        particles: [],
+        useEm: sceneNum === 5,
+        lift: lift,
+        fontFamily: SERIF,
+        fsFn: function () { return fontSizePx(); },
+        trackFn: function () { return trackingEm(); },
+        lineHFn: function () { return 2; },
+        align: "center",
+        maxAlpha: 1,
+        shadowBlur: 18,
+        minFs: 13,
+        padFn: function (fs) { return Math.max(28, fs); },
+        availFn: function (vw, pad) { return vw * 0.96 - pad * 2; },
+        targetFn: function (phone) { return phone ? 6800 : 9000; },
+        topUp: true
+      });
     });
     return messages;
   }
 
-  // Intro block (v27): copy stays in the HTML (.intro-text); it is sampled
-  // through the same particle pipeline as telops and driven by beat 2's rect,
-  // so it assembles/holds/dissolves exactly like the scene-2 telop above it.
+  // たっちゃん intro: v26 sampling fidelity (computed SANS styles straight
+  // from .intro-text, left-aligned lines) + v27 viewport-fixed anchoring: the
+  // text column and photo form one group pinned to the lower viewport, and
+  // beat 2's section rect drives assembleAmount exactly like the scene-2
+  // telop above it — the block never scrolls.
   function parseIntroMessage() {
     var sec = document.querySelector('section.beat[data-scene="2"]');
-    var txt = document.querySelector(".intro-text");
-    if (!sec || !txt) return null;
+    var strip = document.querySelector(".intro");
+    var textEl = strip ? strip.querySelector(".intro-text") : null;
+    if (!sec || !strip || !textEl) return null;
+    var desktop = isDesktop();
     var lines = [];
-    txt.querySelectorAll("p").forEach(function (p) {
-      var bold = p.classList && p.classList.contains("intro-name");
-      var current = [];
-      p.childNodes.forEach(function (node) {
-        if (node.nodeType === 3) {
-          if (node.textContent) current.push({ text: node.textContent, em: false, bold: bold });
-        } else if (node.nodeName === "BR") {
-          lines.push(current);
-          current = [];
-        }
-      });
-      lines.push(current);
-    });
-    lines = lines.filter(function (line) {
-      return line.some(function (run) { return /[^\s]/.test(run.text); });
-    });
+    for (var i = 0; i < textEl.children.length; i++) {
+      var p = textEl.children[i];
+      var sub = tokenize(p, desktop, false, p.classList && p.classList.contains("intro-name"));
+      for (var j = 0; j < sub.length; j++) lines.push(sub[j]);
+    }
     if (!lines.length) return null;
     return {
-      section: sec,
+      progressEl: sec,
       lines: lines,
       particles: [],
       useEm: false,
       lift: 0,
       introPhoto: true,
-      fs: function (phone) { return phone ? Math.max(11.2, Math.min(12.8, vw * 0.032)) : 14.7; },
-      track: 0.05,
-      lineHFactor: 1.8,
-      pad: 14,
-      target: function (phone) { return phone ? 2600 : 3200; }
+      fontFamily: SANS,
+      fsFn: function () { return computedFs(textEl, 12.8); },
+      trackFn: function (fs) { return computedTrackEm(textEl, fs, 0.05); },
+      lineHFn: function (fs) { return computedLineHEm(textEl, fs, 1.95); },
+      align: "left",
+      maxAlpha: 0.88,
+      shadowBlur: 10,
+      minFs: 8,
+      padFn: function (fs) { return Math.max(14, fs); },
+      availFn: function () {
+        var r = textEl.getBoundingClientRect();
+        return Math.max(60, r.width * 0.995);
+      },
+      targetFn: function (phone) { return phone ? 2200 : 2600; },
+      topUp: false
     };
   }
 
-  // Mid-CTA heading (v27): 「ここから。」 as viewport-fixed particle text,
-  // driven by the mid-cta section's scroll progress like a telop beat.
+  // Mid-CTA label 「ここから。」: v26 sampling fidelity (computed SERIF styles
+  // from the label) + v27 viewport-fixed anchoring just above the fixed form;
+  // the mid-cta section's scroll progress drives it like a telop beat.
   function parseMidMessage() {
     var sec = document.querySelector("section.mid-cta");
     var label = sec ? sec.querySelector(".mid-cta-label") : null;
     if (!sec || !label) return null;
-    var text = (label.textContent || "").replace(/^\s+|\s+$/g, "");
+    var text = label.textContent.replace(/\s+/g, "");
     if (!text) return null;
     return {
-      section: sec,
-      lines: [[{ text: text, em: false }]],
+      progressEl: sec,
+      lines: [[{ text: text, em: false, bold: false }]],
       particles: [],
       useEm: false,
       lift: 0,
       midLabel: true,
-      fs: function (phone) {
-        return phone ? Math.max(20, Math.min(26, vw * 0.056)) : Math.max(28, Math.min(34, vw * 0.024));
-      },
-      track: 0.18,
-      lineHFactor: 2,
-      pad: 24,
-      target: function (phone) { return phone ? 2400 : 3200; }
+      fontFamily: SERIF,
+      fsFn: function () { return computedFs(label, 16); },
+      trackFn: function (fs) { return computedTrackEm(label, fs, 0.18); },
+      lineHFn: function () { return 2; },
+      align: "center",
+      maxAlpha: 0.82,
+      shadowBlur: 12,
+      minFs: 11,
+      padFn: function () { return 16; },
+      availFn: function (vw) { return vw * 0.9; },
+      targetFn: function () { return 1000; },
+      topUp: false
     };
   }
 
@@ -245,8 +297,9 @@
   document.body.appendChild(canvas);
   var ctx = canvas.getContext("2d", { alpha: true });
 
-  // Mid-CTA fixed form + intro photo (v27). The photo is drawn on the canvas
-  // with a soft fade once beat 2's particles assemble.
+  // v27: the mid form is viewport-fixed while its beat is active, and the
+  // intro photo is drawn on the canvas (soft fade) — both anchored to the
+  // locked vw/vh so nothing drifts between rebuilds.
   var midInnerEl = document.querySelector(".mid-cta-inner");
   var midInnerTopPx = "";
   var introImg = new Image();
@@ -325,13 +378,13 @@
   var ready = false;
   var rebuildTimer = 0;
 
-  function measureLine(ctx2, runs, fs, track) {
+  function measureLine(ctx2, runs, fs, track, family) {
     var total = 0;
     var glyphs = [];
     runs.forEach(function (run) {
       var size = run.em ? fs * 1.12 : fs;
       var weight = run.em ? 500 : (run.bold ? 600 : 400);
-      ctx2.font = weight + " " + size + "px \"Noto Serif JP\", \"Hiragino Mincho ProN\", serif";
+      ctx2.font = weight + " " + size + "px " + family;
       for (var i = 0; i < run.text.length; i++) {
         var ch = run.text.charAt(i);
         var w = ctx2.measureText(ch).width;
@@ -344,33 +397,48 @@
     return { width: total, glyphs: glyphs };
   }
 
+  // v26: shared run painter — used for both the sampling probe and the solid
+  // crossfade canvas so particle homes and solid glyphs coincide exactly.
+  function paintRuns(ctxR, measured, opts) {
+    ctxR.textAlign = "left";
+    ctxR.textBaseline = "middle";
+    measured.forEach(function (m, li) {
+      var x = opts.align === "left" ? opts.pad : (opts.w - m.width) / 2;
+      var y = opts.pad + opts.lineH * li + opts.lineH / 2;
+      m.glyphs.forEach(function (g) {
+        ctxR.font = g.weight + " " + g.size + "px " + opts.family;
+        ctxR.fillStyle = g.em ? opts.emColor : "#ffffff";
+        ctxR.fillText(g.ch, x, y);
+        x += g.w + g.tr;
+      });
+    });
+  }
+
   function sampleMessage(msg) {
     var phone = vw < 769;
-    var fs = msg.fs ? msg.fs(phone) : fontSizePx();
-    var track = msg.track != null ? msg.track : trackingEm();
-    var lineHFactor = msg.lineHFactor || 2;
-    var target = msg.target ? msg.target(phone) : (phone ? 6800 : 9000);
+    var fs = msg.fsFn(phone);
+    var track = msg.trackFn(fs);
     var probe = document.createElement("canvas");
     var pctx = probe.getContext("2d", { willReadFrequently: true });
     var useEm = msg.useEm;
-    // Fit-to-width: shrink fs until the longest line fits inside vw*0.96 including padding,
-    // so long lines (e.g. scene 3 「ひとりでつくるものじゃない。」) never clip left/right on phones.
+    // Fit-to-width: shrink fs until the longest line fits the message's
+    // available width, so long lines never clip left/right on phones.
     var maxLineW = 0;
     var measured = [];
-    var pad = msg.pad != null ? msg.pad : 28;
+    var pad = msg.padFn(fs);
     for (var fit = 0; fit < 5; fit++) {
       maxLineW = 0;
       measured = msg.lines.map(function (runs) {
-        var m = measureLine(pctx, runs, fs, track);
+        var m = measureLine(pctx, runs, fs, track, msg.fontFamily);
         if (m.width > maxLineW) maxLineW = m.width;
         return m;
       });
-      pad = msg.pad != null ? msg.pad : Math.max(28, fs);
-      var avail = vw * 0.96 - pad * 2;
-      if (maxLineW <= avail || fs <= 13) break;
-      fs = Math.max(13, fs * (avail / maxLineW) * 0.985);
+      pad = msg.padFn(fs);
+      var avail = msg.availFn(vw, pad);
+      if (maxLineW <= avail || fs <= msg.minFs) break;
+      fs = Math.max(msg.minFs, fs * (avail / maxLineW) * 0.985);
     }
-    var lineH = fs * lineHFactor;
+    var lineH = fs * msg.lineHFn(fs);
     var w = Math.ceil(Math.min(vw * 0.96, maxLineW + pad * 2));
     var h = Math.ceil(msg.lines.length * lineH + pad * 2);
     var localDpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -378,23 +446,13 @@
     probe.height = Math.max(1, Math.floor(h * localDpr));
     pctx.setTransform(localDpr, 0, 0, localDpr, 0, 0);
     pctx.clearRect(0, 0, w, h);
-    pctx.textAlign = "left";
-    pctx.textBaseline = "middle";
 
     var emColor = useEm ? EM_COLOR : "#ffcc80";
-    measured.forEach(function (m, li) {
-      var x = (w - m.width) / 2;
-      var y = pad + lineH * li + lineH / 2;
-      m.glyphs.forEach(function (g) {
-        pctx.font = g.weight + " " + g.size + "px \"Noto Serif JP\", \"Hiragino Mincho ProN\", serif";
-        pctx.fillStyle = g.em ? emColor : "#ffffff";
-        pctx.fillText(g.ch, x, y);
-        x += g.w + g.tr;
-      });
-    });
+    paintRuns(pctx, measured, { align: msg.align, pad: pad, lineH: lineH, w: w, family: msg.fontFamily, emColor: emColor });
 
     var img = pctx.getImageData(0, 0, probe.width, probe.height);
     var data = img.data;
+    var target = msg.targetFn(phone);
     var candidates = [];
     for (var y = 0; y < probe.height; y += 1) {
       for (var x = 0; x < probe.width; x += 1) {
@@ -421,11 +479,15 @@
       candidates = kept;
     }
 
+    // v27 anchors: every message is pinned to the locked viewport — telops
+    // centered (scene 2 lifted), the intro group low, the mid label just
+    // above the fixed form. Scroll only drives assembleAmount; nothing here
+    // reads a live DOM rect.
     var ox, oy;
     if (msg.introPhoto) {
-      // Intro block (v27): circular photo + text grouped as one, anchored to
-      // the lower viewport (bottom 7% phones / 10% desktop) — where the old
-      // DOM strip sat when beat 2 was centered, but never scrolling.
+      // Intro block: circular photo + text grouped as one, anchored to the
+      // lower viewport (bottom 7% phones / 10% desktop) — where the old DOM
+      // strip sat when beat 2 was centered, but never scrolling.
       var pd = phone ? 48 : 67;
       var pgap = phone ? 11 : 18;
       var gx = (vw - (pd + pgap + w)) / 2;
@@ -435,7 +497,7 @@
       oy = btop + (blockH - h) / 2;
       msg.photo = { x: gx, cy: btop + blockH / 2, d: pd };
     } else if (msg.midLabel) {
-      // 「ここから。」 (v27): anchored just above the viewport-fixed mid form.
+      // 「ここから。」 sits just above the viewport-fixed mid form.
       ox = (vw - w) / 2;
       var formH = midInnerEl ? midInnerEl.offsetHeight : 170;
       oy = vh / 2 - formH / 2 - 24 - fs * 0.5 - h / 2;
@@ -449,19 +511,19 @@
       var c = candidates[p];
       particles.push(makeParticle(ox + c.lx, oy + c.ly, c.a, c.em, spread));
     }
-    var extra = 0;
-    // Cap padding duplicates at the candidate count: small text (intro, mid
-    // label) would otherwise stack the same pixels many times over.
-    while (particles.length < target && extra < candidates.length) {
-      var src = candidates[extra % candidates.length];
-      particles.push(makeParticle(
-        ox + src.lx + (Math.random() - 0.5) * 1.15,
-        oy + src.ly + (Math.random() - 0.5) * 1.15,
-        src.a,
-        src.em,
-        spread
-      ));
-      extra++;
+    if (msg.topUp) {
+      var extra = 0;
+      while (particles.length < target && extra < target) {
+        var src = candidates[extra % candidates.length];
+        particles.push(makeParticle(
+          ox + src.lx + (Math.random() - 0.5) * 1.15,
+          oy + src.ly + (Math.random() - 0.5) * 1.15,
+          src.a,
+          src.em,
+          spread
+        ));
+        extra++;
+      }
     }
     msg.particles = particles;
     msg.metrics = { w: w, h: h, fs: fs, count: particles.length, ox: ox, oy: oy };
@@ -471,23 +533,12 @@
     solid.height = probe.height;
     var sctx = solid.getContext("2d");
     sctx.setTransform(localDpr, 0, 0, localDpr, 0, 0);
-    sctx.textAlign = "left";
-    sctx.textBaseline = "middle";
     sctx.shadowColor = "rgba(0,0,0,0.85)";
-    sctx.shadowBlur = fs >= 20 ? 18 : 12;
+    sctx.shadowBlur = msg.shadowBlur;
     // no Y offset: the solid phase must land exactly on the particle home
     // positions, otherwise the text appears to settle downward at crossfade
     sctx.shadowOffsetY = 0;
-    measured.forEach(function (m, li) {
-      var x = (w - m.width) / 2;
-      var y = pad + lineH * li + lineH / 2;
-      m.glyphs.forEach(function (g) {
-        sctx.font = g.weight + " " + g.size + "px \"Noto Serif JP\", \"Hiragino Mincho ProN\", serif";
-        sctx.fillStyle = g.em ? emColor : "#ffffff";
-        sctx.fillText(g.ch, x, y);
-        x += g.w + g.tr;
-      });
-    });
+    paintRuns(sctx, measured, { align: msg.align, pad: pad, lineH: lineH, w: w, family: msg.fontFamily, emColor: emColor });
     msg.solidCanvas = solid;
     msg.solidW = w;
     msg.solidH = h;
@@ -505,7 +556,7 @@
     canvas.style.width = vw + "px";
     canvas.style.height = vh + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    messages = parseMessages();
+    messages = parseTelopMessages();
     introMsg = parseIntroMessage();
     if (introMsg) messages.push(introMsg);
     midMsg = parseMidMessage();
@@ -513,10 +564,10 @@
     for (var i = 0; i < messages.length; i++) sampleMessage(messages[i]);
     ready = messages.some(function (m) { return m.particles.length > 80; });
     document.body.classList.toggle("particles-ready", ready);
-    // Takeover gates: only hide the DOM fallback when its canvas version
-    // actually sampled enough particles to render.
-    document.body.classList.toggle("intro-particles", !!(introMsg && introMsg.particles.length > 80));
-    document.body.classList.toggle("mid-fixed", !!(midMsg && midMsg.particles.length > 80));
+    // v26 per-block fallbacks: only hide the DOM text of blocks that actually
+    // produced particles, so a failed sample never blanks real copy.
+    document.body.classList.toggle("particles-intro", !!(introMsg && introMsg.particles.length > 120));
+    document.body.classList.toggle("particles-mid", !!(midMsg && midMsg.particles.length > 60));
   }
 
   function scheduleRebuild() {
@@ -542,7 +593,8 @@
     var midFade = 0;
     for (var m = 0; m < messages.length; m++) {
       var msg = messages[m];
-      var rec = msg.section.getBoundingClientRect();
+      if (!msg.particles.length) continue;
+      var rec = msg.progressEl.getBoundingClientRect();
       var n = (rec.top + rec.height * 0.5) / vh;
       var fade = cloudFade(n);
       var t = assembleAmount(n);
@@ -562,24 +614,23 @@
           var local = ease(clamp((t - p.delay) / delaySpan, 0, 1));
           var xy = particleXY(p, local, fromBelow, now);
           var size = p.size * (0.9 + 0.7 * local);
-          ctx.globalAlpha = (0.30 + 0.58 * local) * p.a * p.shade * fade * pFade;
+          ctx.globalAlpha = (0.30 + 0.58 * local) * p.a * p.shade * fade * pFade * msg.maxAlpha;
           ctx.drawImage(p.em ? emSprite : spriteLight, xy.x - size * 0.5, xy.y - size * 0.5, size, size);
         }
         ctx.globalCompositeOperation = "source-over";
       }
 
-      var solidAlpha = solidTextAlpha(t) * fade;
+      var solidAlpha = solidTextAlpha(t) * fade * msg.maxAlpha;
       if (solidAlpha > 0.01 && msg.solidCanvas) {
         ctx.globalAlpha = solidAlpha;
-        var ox = msg.metrics.ox;
-        var oy = msg.metrics.oy;
-        ctx.drawImage(msg.solidCanvas, ox, oy, msg.solidW, msg.solidH);
+        ctx.drawImage(msg.solidCanvas, msg.metrics.ox, msg.metrics.oy, msg.solidW, msg.solidH);
       }
 
-      // Intro photo (v27): soft-fades in sync with the solid text crossfade,
-      // circular crop with the same border/shadow as the old DOM strip.
+      // Intro photo: v26's soft-fade curve (appears as the glyphs finish
+      // gathering, leaves with the first half of the dissolve), drawn on the
+      // canvas as a circular crop with the same border/shadow as the DOM strip.
       if (msg.introPhoto && msg.photo && introImgReady) {
-        var pa = solidTextAlpha(t) * fade;
+        var pa = clamp((t - 0.45) / 0.35, 0, 1) * fade;
         if (pa > 0.01) {
           var ph = msg.photo;
           var pr = ph.d / 2;
@@ -617,12 +668,17 @@
       ctx.globalAlpha = 1;
     }
 
-    // Mid-CTA form (v27): fades in viewport-fixed once the heading has
-    // assembled, back out as the beat dissolves. top is pinned to the locked
-    // vh so it cannot drift from the canvas heading when the mobile URL bar
-    // shows/hides between rebuilds.
+    // Mid-CTA form (v27): fades in viewport-fixed once the label has
+    // assembled, back out as the beat dissolves. v26 kept: keyboard focus
+    // forces it visible so the input can never fade out while typing — but
+    // only while the mid beat is still on screen, so a stale focused form
+    // never hovers over later scenes. top is pinned to the locked vh so it
+    // cannot drift from the canvas label when the mobile URL bar shows/hides
+    // between rebuilds.
     if (midInnerEl) {
-      midInnerEl.classList.toggle("settled", midT > 0.88 && midFade > 0.4);
+      var settle = midT > 0.88 && midFade > 0.4;
+      if (midFade > 0.02 && midInnerEl.contains(document.activeElement)) settle = true;
+      midInnerEl.classList.toggle("settled", settle);
       var midTop = Math.round(vh / 2) + "px";
       if (midInnerTopPx !== midTop) {
         midInnerEl.style.top = midTop;
