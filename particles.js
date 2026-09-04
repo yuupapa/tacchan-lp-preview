@@ -1,4 +1,4 @@
-/* v17: glyph-sampled canvas particles + solid text crossfade at hold */
+/* v21: glyph-sampled canvas particles + solid text crossfade at hold; desktop telop size bumped with fit-to-width guard */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -49,7 +49,7 @@
   function fontSizePx() {
     var w = window.innerWidth;
     if (w < 769) return Math.max(24.8, Math.min(34.4, w * 0.064));
-    return Math.max(32, Math.min(48, w * 0.028));
+    return Math.max(40, Math.min(62.4, w * 0.036));
   }
 
   function trackingEm() { return isDesktop() ? 0.12 : 0.07; }
@@ -247,12 +247,30 @@
     var pctx = probe.getContext("2d", { willReadFrequently: true });
     var maxLineW = 0;
     var useCoral = msg.useCoral;
-    var measured = msg.lines.map(function (runs) {
-      var m = measureLine(pctx, runs, fs, track);
-      if (m.width > maxLineW) maxLineW = m.width;
-      return m;
-    });
+    function measureAll() {
+      var maxW = 0;
+      var list = msg.lines.map(function (runs) {
+        var m = measureLine(pctx, runs, fs, track);
+        if (m.width > maxW) maxW = m.width;
+        return m;
+      });
+      return { list: list, maxW: maxW };
+    }
+    var r = measureAll();
+    var measured = r.list;
+    maxLineW = r.maxW;
     var pad = Math.max(28, fs);
+    if (vw >= 769 && maxLineW > 0) {
+      var availW = vw * 0.96 - pad * 2;
+      if (maxLineW > availW) {
+        fs = Math.max(24, fs * (availW / maxLineW));
+        lineH = fs * 2;
+        pad = Math.max(28, fs);
+        r = measureAll();
+        measured = r.list;
+        maxLineW = r.maxW;
+      }
+    }
     var w = Math.ceil(Math.min(vw * 0.96, maxLineW + pad * 2));
     var h = Math.ceil(msg.lines.length * lineH + pad * 2);
     var localDpr = Math.min(window.devicePixelRatio || 1, 2);

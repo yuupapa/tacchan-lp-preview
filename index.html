@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v17: canvas glyph particles + solid text crossfade; no 座布団 plate; text stays viewport-fixed */
+  /* v21: canvas glyph particles + solid text crossfade; no 座布団 plate; text stays viewport-fixed; desktop telops enlarged */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -42,12 +42,12 @@
      bg5 (decision/夕日) ← scene-sunset.jpg (van at ocean sunset)
      bg6 (CTA) ← scene-6.jpg (dusk/calm)
   */
-  #bg1 { background-image: url("scene-5.jpg?v=17"); }
-  #bg2 { background-image: url("scene-2.jpg?v=17"); }
-  #bg3 { background-image: url("scene-community.jpg?v=17"); }
-  #bg4 { background-image: url("scene-4.jpg?v=17"); }
-  #bg5 { background-image: url("scene-sunset.jpg?v=17"); }
-  #bg6 { background-image: url("scene-6.jpg?v=17"); }
+  #bg1 { background-image: url("scene-5.jpg?v=21"); }
+  #bg2 { background-image: url("scene-2.jpg?v=21"); }
+  #bg3 { background-image: url("scene-community.jpg?v=21"); }
+  #bg4 { background-image: url("scene-4.jpg?v=21"); }
+  #bg5 { background-image: url("scene-sunset.jpg?v=21"); }
+  #bg6 { background-image: url("scene-6.jpg?v=21"); }
   #glyph-canvas {
     position: fixed;
     inset: 0;
@@ -147,15 +147,18 @@
   @media (max-width: 768px) {
     .lines { letter-spacing: .07em; line-height: 2; font-size: clamp(1.55rem, 6.4vw, 2.15rem); }
   }
-  /* Desktop: wider layout, larger type, fewer breaks */
+  /* Desktop: wider layout, larger type, fewer breaks (v21: telops ~+25-30% vs v17) */
   @media (min-width: 769px) {
     br.sp { display: none; }
     .lines {
-      max-width: 52rem;
-      font-size: clamp(2rem, 2.8vw, 3rem);
+      max-width: 70rem;
+      font-size: clamp(2.5rem, 3.6vw, 3.9rem);
       letter-spacing: .12em;
       line-height: 2;
     }
+    .cta-inner { max-width: 44rem; }
+    .cta h2 { font-size: clamp(2.4rem, 4.2vw, 3.4rem); }
+    .cta form, .cta footer { max-width: 28rem; margin-inline: auto; }
   }
   /* Ken Burns animation - reduced scale for less crop */
   @keyframes kenburns {
@@ -240,6 +243,6 @@
       </div>
     </section>
   </div>
-<script src="particles.js?v=17"></script>
+<script src="particles.js?v=21"></script>
 </body>
 </html>
