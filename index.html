@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* v15: motion/CSS polish — removed 座布団 plate, richer particles, text position fixed */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -55,6 +56,7 @@
     justify-content: center;
     padding: 4rem 1.25rem;
   }
+  /* v15: removed frosted "座布団" plate — text-shadow only for readability */
   .lines {
     max-width: 36rem;
     font-family: "Noto Serif JP", serif;
@@ -63,12 +65,11 @@
     line-height: 2.2;
     font-size: clamp(1.7rem, 5.4vw, 2.75rem);
     text-align: center;
-    text-shadow: 0 2px 18px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.9), 0 0 24px rgba(0,0,0,.55);
-    background: rgba(0,0,0,.20);
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(2px);
-    padding: 1.5rem 1.2rem;
-    border-radius: 0.625rem;
+    text-shadow:
+      0 2px 22px rgba(0,0,0,.95),
+      0 1px 4px rgba(0,0,0,.95),
+      0 0 32px rgba(0,0,0,.7),
+      0 4px 48px rgba(0,0,0,.5);
   }
   .lines p { margin: 0.2em 0; }
   .lines .em {
@@ -232,13 +233,21 @@
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function ease(t) { return t * t * (3 - 2 * t); }
+  // v15: assembleAmount drives particle convergence only — NOT line block motion
+  // Direction: particles gather when arriving from BELOW, scatter when leaving UPWARD
+  // Hold zone widened 0.22–0.70 for comfortable reading
   function assembleAmount(n) {
     // n = line midpoint / viewport height (0=top, 1=bottom)
-    // below: particles incoming. center: text readable (hold). above: particles dissolve.
+    // Scroll up: line rises (n decreases). Scroll down: line descends (n increases).
+    // below viewport (n>0.90): fully scattered, particles waiting below
+    // converge zone (0.70→0.90): particles gather INTO letters as line enters view
+    // hold (0.22→0.70): fully assembled, readable text
+    // dissolve zone (0.06→0.22): letters break INTO particles rising out
+    // above viewport (n<0.06): fully scattered, particles dissipated upward
     if (n > 0.90) return 0;
-    if (n > 0.70) return ease(1 - (n - 0.70) / 0.20); // converge while rising (0.70 → 0.90)
-    if (n >= 0.22) return 1;                          // hold (0.22 → 0.70)
-    if (n > 0.06) return ease((n - 0.06) / 0.16);     // dissolve upward (0.06 → 0.22)
+    if (n > 0.70) return ease(1 - (n - 0.70) / 0.20);
+    if (n >= 0.22) return 1;
+    if (n > 0.06) return ease((n - 0.06) / 0.16);
     return 0;
   }
 
@@ -273,17 +282,19 @@
         var span = document.createElement("span");
         span.className = "ch";
         span.textContent = n.char === " " ? "\u00A0" : n.char;
+        // v15: richer particles — finer scatter, gather from below, dissolve upward
+        // Direction: arrival=particles scatter below gathering up; exit=letters break upward
         var incoming = {
-          x: (Math.random() - 0.5) * 160,
-          y: 90 + Math.random() * 140,
-          r: (Math.random() - 0.5) * 50,
-          s: 0.12 + Math.random() * 0.28
+          x: (Math.random() - 0.5) * 220,
+          y: 110 + Math.random() * 180,
+          r: (Math.random() - 0.5) * 70,
+          s: 0.06 + Math.random() * 0.22
         };
         var outgoing = {
-          x: (Math.random() - 0.5) * 180,
-          y: -(90 + Math.random() * 150),
-          r: (Math.random() - 0.5) * 60,
-          s: 0.1 + Math.random() * 0.28
+          x: (Math.random() - 0.5) * 240,
+          y: -(120 + Math.random() * 190),
+          r: (Math.random() - 0.5) * 80,
+          s: 0.04 + Math.random() * 0.20
         };
         if (n.em) {
           if (!currentEmSpan) {
@@ -302,14 +313,16 @@
     lines.push({ p: p, chars: chars });
   });
 
+  // v15: setChar applies particle transform; text block position is FIXED (no vertical slide)
+  // assembleAmount only drives char scatter↔converge, NOT section/line translation
   function setChar(ch, from, t) {
     var k = 1 - t;
     var x = from.x * k;
     var y = from.y * k;
     var r = from.r * k;
     var s = 1 + (from.s - 1) * k;
-    var o = 0.08 + 0.9 * t;
-    var blur = (1 - t) * 2.4;
+    var o = 0.05 + 0.95 * t;
+    var blur = (1 - t) * 4.2; // v15: more blur when scattered for finer grain
     ch.el.style.opacity = o.toFixed(3);
     ch.el.style.filter = "blur(" + blur.toFixed(2) + "px)";
     ch.el.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0) scale(" + s.toFixed(2) + ") rotate(" + r.toFixed(1) + "deg)";
