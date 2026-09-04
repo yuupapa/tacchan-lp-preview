@@ -106,7 +106,6 @@
     font-family: inherit; cursor: pointer;
   }
   .hint { color: rgba(255,255,255,.55); font-size: .75rem; margin-top: .2rem; }
-  .thanks { display: none; color: rgba(255,255,255,.9); line-height: 1.9; }
   footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.3); font-size: .75rem; letter-spacing: .12em; }
   @media (max-width: 768px) {
     .lines { letter-spacing: .07em; line-height: 2; font-size: clamp(1.55rem, 6.4vw, 2.15rem); }
@@ -191,12 +190,12 @@
         <p class="eyebrow">期間限定</p>
         <h2>環境を先に変える手順</h2>
         <p class="lead">場所に縛られない働き方を始めるための<br>具体的なステップを無料でお届けします</p>
-        <form id="form">
-          <input type="email" name="email" placeholder="メールアドレスを入力" required>
+        <form id="form" action="https://utage-system.com/r/RSEYSaeN1vO0/store" method="post">
+          <input type="hidden" name="redirect_url" value="https://utage-system.com/p/ithxISVdorRw">
+          <input type="email" name="mail" id="mail" placeholder="メールアドレスを入力" required autocomplete="email">
           <button type="submit">今すぐ無料で手に入れる</button>
           <p class="hint">※ いつでも配信解除できます</p>
         </form>
-        <p class="thanks" id="thanks">受け付けた。<br>配信の準備ができたら送る。</p>
         <footer>© たっちゃん</footer>
       </div>
     </section>
@@ -317,11 +316,6 @@
   document.addEventListener("visibilitychange", requestTick);
   tick();
 
-  document.getElementById("form").addEventListener("submit", function (e) {
-    e.preventDefault();
-    e.target.style.display = "none";
-    document.getElementById("thanks").style.display = "block";
-  });
 })();
 </script>
 </body>
