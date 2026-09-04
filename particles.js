@@ -1,4 +1,4 @@
-/* v21: desktop telop size bumped (~+29%); v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
+/* v23: background activation reads every [data-scene] section (including the mid CTA), so the bg no longer falls back to the morning scene while the mid form is in view. v21: desktop telop size bumped (~+29%); v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -10,6 +10,10 @@
     document.getElementById("bg5"),
     document.getElementById("bg6")
   ];
+
+  // Static NodeList of every section that pins a background, including the
+  // mid CTA (data-scene="3") which is not a .beat and has no particles.
+  var sceneSections = document.querySelectorAll("[data-scene]");
 
   var EM_COLOR = "#7DFFB2";
   var EM_RGB = "125,255,178";
@@ -398,13 +402,16 @@
     // between scroll frames.
 
     var active = 1;
+    for (var s = 0; s < sceneSections.length; s++) {
+      var srec = sceneSections[s].getBoundingClientRect();
+      if (srec.top < vh * 0.55 && srec.bottom > vh * 0.35) {
+        active = Number(sceneSections[s].getAttribute("data-scene")) || active;
+      }
+    }
     for (var m = 0; m < messages.length; m++) {
       var msg = messages[m];
       var rec = msg.section.getBoundingClientRect();
       var n = (rec.top + rec.height * 0.5) / vh;
-      if (rec.top < vh * 0.55 && rec.bottom > vh * 0.35) {
-        active = Number(msg.section.getAttribute("data-scene")) || (m + 1);
-      }
       var fade = cloudFade(n);
       if (fade < 0.02) continue;
       var t = assembleAmount(n);
