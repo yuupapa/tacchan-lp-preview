@@ -1,4 +1,4 @@
-/* v19: glyph-sampled luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip on phones */
+/* v20: glyph-sampled luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip on phones; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -54,11 +54,12 @@
 
   function trackingEm() { return isDesktop() ? 0.12 : 0.07; }
 
+  // Layout viewport only. visualViewport shrinks/grows on iOS during scroll
+  // (URL bar) and pinch-zoom; anchoring text to it makes the glyph field drift.
   function viewSize() {
-    var vv = window.visualViewport;
     return {
-      w: Math.max(1, (vv && vv.width) || window.innerWidth || 1),
-      h: Math.max(1, (vv && vv.height) || window.innerHeight || 1)
+      w: Math.max(1, window.innerWidth || 1),
+      h: Math.max(1, window.innerHeight || 1)
     };
   }
 
@@ -347,7 +348,9 @@
     sctx.textBaseline = "middle";
     sctx.shadowColor = "rgba(0,0,0,0.85)";
     sctx.shadowBlur = 18;
-    sctx.shadowOffsetY = 2;
+    // no Y offset: the solid phase must land exactly on the particle home
+    // positions, otherwise the text appears to settle downward at crossfade
+    sctx.shadowOffsetY = 0;
     measured.forEach(function (m, li) {
       var x = (w - m.width) / 2;
       var y = pad + lineH * li + lineH / 2;
@@ -390,10 +393,9 @@
   function draw() {
     var now = performance.now();
     ctx.clearRect(0, 0, vw, vh);
-    var vs = viewSize();
-    if (Math.abs(vs.w - vw) > 2 || Math.abs(vs.h - vh) > 2) {
-      rebuild();
-    }
+    // No per-frame viewport polling here: vw/vh stay at the values captured by the
+    // last (debounced, width-guarded) rebuild, so the text anchor cannot drift
+    // between scroll frames.
 
     var active = 1;
     for (var m = 0; m < messages.length; m++) {
@@ -478,10 +480,17 @@
     }
   }
 
-  window.addEventListener("resize", scheduleRebuild);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", scheduleRebuild);
+  // iOS Safari fires resize on scroll while the URL bar shows/hides (height-only
+  // change). Rebuilding then re-randomizes the particle field and re-anchors the
+  // text, which reads as a visible jump. Rebuild only on width change (rotation /
+  // genuine resize); on desktop there is no collapsing URL bar, so height-only
+  // changes rebuild too and keep the text centered.
+  function onViewportResize() {
+    var w = window.innerWidth || 1;
+    var h = window.innerHeight || 1;
+    if (Math.abs(w - vw) > 2 || (w >= 769 && Math.abs(h - vh) > 2)) scheduleRebuild();
   }
+  window.addEventListener("resize", onViewportResize);
   document.addEventListener("visibilitychange", function () {
     running = document.visibilityState !== "hidden";
     if (running) requestAnimationFrame(loop);
