@@ -9,11 +9,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v20: desktop bg back to cover anchored bottom (no letterbox side bars); text anchor locked against iOS URL-bar scroll drift */
+  /* v22: locked copy (soft mid CTA after scene 3; final CTA eyebrow trimmed, lead removed, new button label); all 6 scene stills regenerated as wide-FOV film placeholders. v20: desktop bg cover anchored bottom; text anchor locked against iOS URL-bar scroll drift */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
   body { font-family: "Noto Sans JP", sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
   .bg {
     position: fixed; top: 0; left: 0; right: 0; z-index: 0;
     height: 100svh;
@@ -34,20 +37,20 @@
     background: linear-gradient(180deg, rgba(8,8,10,.06) 0%, rgba(8,8,10,.12) 30%, transparent 50%),
                 linear-gradient(to top, rgba(8,8,10,.55) 0%, rgba(8,8,10,.22) 40%, transparent 70%);
   }
-  /* Background mapping (v18): all stills regenerated as wide, pulled-back compositions
-     bg1 (morning wake) ← scene-morning.jpg (tiny van + figure on vast misty dawn lake)
-     bg2 (travel/freedom) ← scene-travel.jpg (tiny van on sweeping coastal road)
-     bg3 (community/仲間) ← scene-community.jpg (distant campfire group by dusk lake)
-     bg4 (work+life) ← scene-work.jpg (tiny laptop table + van in huge mountain valley)
-     bg5 (decision/夕日) ← scene-sunset.jpg (tiny van silhouette under vast sunset sky)
-     bg6 (CTA) ← scene-dusk.jpg (tiny warm-lit van window in blue-hour vastness)
+  /* Background mapping (v22): all 6 stills regenerated as wide-FOV film placeholders
+     bg1 (morning wake) ← scene-morning.jpg (tiny camper van on vast misty dawn lakeshore)
+     bg2 (travel/freedom) ← scene-travel.jpg (tiny van on sweeping coastal morning road)
+     bg3 (community/仲間) ← scene-community.jpg (distant campfire gathering by dusk lake)
+     bg4 (work+life) ← scene-work.jpg (tiny laptop table + van in bright mountain meadow)
+     bg5 (decision/夕日) ← scene-sunset.jpg (bottom-weighted sunset sky, tiny van silhouette)
+     bg6 (CTA) ← scene-dusk.jpg (dark blue-hour calm, tiny warm van window light)
   */
-  #bg1 { background-image: url("scene-morning.jpg?v=20"); }
-  #bg2 { background-image: url("scene-travel.jpg?v=20"); }
-  #bg3 { background-image: url("scene-community.jpg?v=20"); }
-  #bg4 { background-image: url("scene-work.jpg?v=20"); }
-  #bg5 { background-image: url("scene-sunset.jpg?v=20"); }
-  #bg6 { background-image: url("scene-dusk.jpg?v=20"); }
+  #bg1 { background-image: url("scene-morning.jpg?v=22"); }
+  #bg2 { background-image: url("scene-travel.jpg?v=22"); }
+  #bg3 { background-image: url("scene-community.jpg?v=22"); }
+  #bg4 { background-image: url("scene-work.jpg?v=22"); }
+  #bg5 { background-image: url("scene-sunset.jpg?v=22"); }
+  #bg6 { background-image: url("scene-dusk.jpg?v=22"); }
   #glyph-canvas {
     position: fixed;
     top: 0;
@@ -127,7 +130,6 @@
     word-break: keep-all;
     margin-bottom: 1.2rem;
   }
-  .cta .lead { color: rgba(255,255,255,.85); font-size: 1.05rem; line-height: 1.9; margin-bottom: 2rem; }
   form { display: flex; flex-direction: column; gap: 1rem; }
   input[type=email] {
     width: 100%; padding: 1rem 1.4rem;
@@ -147,6 +149,29 @@
     font-family: inherit; cursor: pointer;
   }
   .hint { color: rgba(255,255,255,.55); font-size: .75rem; margin-top: .2rem; }
+  /* Soft mid CTA (v22): text-link only, between scene 3 and scene 4 */
+  .mid-cta {
+    min-height: 48svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.25rem;
+  }
+  .mid-cta-link {
+    font-family: "Noto Serif JP", serif;
+    font-size: 1rem;
+    letter-spacing: .18em;
+    color: rgba(255,255,255,.82);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,.35);
+    padding-bottom: .45em;
+    text-shadow: 0 1px 12px rgba(0,0,0,.8);
+    transition: color .25s ease, border-color .25s ease;
+  }
+  .mid-cta-link:hover, .mid-cta-link:focus-visible {
+    color: #fff;
+    border-bottom-color: rgba(255,255,255,.85);
+  }
   footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.3); font-size: .75rem; letter-spacing: .12em; }
   footer .legal-links { margin-top: 1rem; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
   footer .legal-links a { color: rgba(255,255,255,.35); text-decoration: none; transition: color .2s; }
@@ -222,11 +247,13 @@
         <p><span class="em">好きな場所</span>で、<br class="sp">生きていく。</p>
       </div>
     </section>
-    <!-- NOTE: Scene 3 NEEDS REPLACE - current assets lack real community/camp group photo -->
     <section class="beat" data-scene="3">
       <div class="lines">
         <p>自由は、<br><span class="em">ひとりでつくるものじゃない。</span></p>
       </div>
+    </section>
+    <section class="mid-cta">
+      <a class="mid-cta-link" href="#form">ここから受け取る</a>
     </section>
     <section class="beat" data-scene="4">
       <div class="lines">
@@ -238,15 +265,14 @@
         <p>いつかじゃない。<br><span class="em mint">今日、変わろう。</span></p>
       </div>
     </section>
-    <section class="cta" data-scene="6">
+    <section class="cta" id="form" data-scene="6">
       <div class="cta-inner">
-        <p class="eyebrow">期間限定・無料セミナー</p>
+        <p class="eyebrow">期間限定</p>
         <h2>場所に縛られない働き方を、<br>ここから。</h2>
-        <p class="lead">自由な暮らしを始めるために、<br class="sp">最初に整えるべき環境と具体的なステップを、<br class="sp">無料セミナーでお伝えします。</p>
-        <form id="form" action="https://utage-system.com/r/nLIjbJDSiDdp/store" method="post">
+        <form action="https://utage-system.com/r/nLIjbJDSiDdp/store" method="post">
           <input type="hidden" name="redirect_url" value="https://utage-system.com/p/ithxISVdorRw">
           <input type="email" name="mail" id="mail" placeholder="メールアドレスを入力" required autocomplete="email">
-          <button type="submit">今すぐ無料で参加する</button>
+          <button type="submit">今すぐ無料で手に入れる</button>
           <p class="hint">※ いつでも配信解除できます</p>
         </form>
         <footer>
@@ -259,6 +285,6 @@
       </div>
     </section>
   </div>
-<script src="particles.js?v=20"></script>
+<script src="particles.js?v=22"></script>
 </body>
 </html>
