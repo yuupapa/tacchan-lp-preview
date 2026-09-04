@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v22: locked copy (soft mid CTA after scene 3; final CTA eyebrow trimmed, lead removed, new button label); all 6 scene stills regenerated as wide-FOV film placeholders. v20: desktop bg cover anchored bottom; text anchor locked against iOS URL-bar scroll drift */
+  /* v22: locked copy (soft mid CTA after scene 3; final CTA eyebrow trimmed, lead removed, new button label); all 6 scene stills regenerated as wide-FOV film placeholders. v21: desktop telops enlarged (~+29%). v20: desktop bg cover anchored bottom; text anchor locked against iOS URL-bar scroll drift */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -183,12 +183,12 @@
        shrink + tighten so the full line fits (fallback for reduced-motion / pre-paint) */
     section[data-scene="3"] .lines { font-size: clamp(1.05rem, 5.2vw, 2rem); letter-spacing: .04em; }
   }
-  /* Desktop: wider layout, larger type, fewer breaks */
+  /* Desktop: wider layout, larger type, fewer breaks (v21: telops ~+25-30%) */
   @media (min-width: 769px) {
     br.sp { display: none; }
     .lines {
-      max-width: 52rem;
-      font-size: clamp(2rem, 2.8vw, 3rem);
+      max-width: 70rem;
+      font-size: clamp(2.5rem, 3.6vw, 3.9rem);
       letter-spacing: .12em;
       line-height: 2;
     }
@@ -196,6 +196,11 @@
        anchor to the bottom so the lower portion of the scene stays in frame
        instead of magnifying the middle of the mountain. */
     .bg { background-position: center bottom; }
+    /* v21: larger CTA heading on desktop; wider inner column so the keep-all
+       h2 line fits, while the UTAGE form and footer keep their 30rem width */
+    .cta-inner { max-width: 40rem; }
+    .cta h2 { font-size: clamp(2rem, 3.2vw, 2.6rem); }
+    .cta form, .cta footer { max-width: 30rem; margin-inline: auto; }
   }
   /* Ken Burns animation - reduced scale for less crop */
   @keyframes kenburns {

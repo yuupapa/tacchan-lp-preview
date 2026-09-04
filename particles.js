@@ -1,4 +1,4 @@
-/* v20: glyph-sampled luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip on phones; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
+/* v21: desktop telop size bumped (~+29%); v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -49,7 +49,7 @@
   function fontSizePx() {
     var w = window.innerWidth;
     if (w < 769) return Math.max(24.8, Math.min(34.4, w * 0.064));
-    return Math.max(32, Math.min(48, w * 0.028));
+    return Math.max(40, Math.min(62.4, w * 0.036));
   }
 
   function trackingEm() { return isDesktop() ? 0.12 : 0.07; }
