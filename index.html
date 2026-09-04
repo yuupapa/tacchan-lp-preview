@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v15: motion/CSS polish — removed 座布団 plate, richer particles, text position fixed */
+  /* v16: canvas glyph particles; no 座布団 plate; text stays viewport-fixed */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -34,7 +34,7 @@
     background: linear-gradient(180deg, rgba(8,8,10,.06) 0%, rgba(8,8,10,.12) 30%, transparent 50%),
                 linear-gradient(to top, rgba(8,8,10,.55) 0%, rgba(8,8,10,.22) 40%, transparent 70%);
   }
-  /* Background mapping (v15):
+  /* Background mapping (v16):
      bg1 (morning wake) ← scene-5.jpg (dawn coffee)
      bg2 (travel/freedom) ← scene-2.jpg (coastal road)
      bg3 (community/仲間) ← scene-community.jpg (group working by lake)
@@ -42,13 +42,21 @@
      bg5 (decision/夕日) ← scene-sunset.jpg (van at ocean sunset)
      bg6 (CTA) ← scene-6.jpg (dusk/calm)
   */
-  #bg1 { background-image: url("scene-5.jpg"); }
-  #bg2 { background-image: url("scene-2.jpg"); }
-  #bg3 { background-image: url("scene-community.jpg"); }
-  #bg4 { background-image: url("scene-4.jpg"); }
-  #bg5 { background-image: url("scene-sunset.jpg"); }
-  #bg6 { background-image: url("scene-6.jpg"); }
-  .content { position: relative; z-index: 1; }
+  #bg1 { background-image: url("scene-5.jpg?v=16"); }
+  #bg2 { background-image: url("scene-2.jpg?v=16"); }
+  #bg3 { background-image: url("scene-community.jpg?v=16"); }
+  #bg4 { background-image: url("scene-4.jpg?v=16"); }
+  #bg5 { background-image: url("scene-sunset.jpg?v=16"); }
+  #bg6 { background-image: url("scene-6.jpg?v=16"); }
+  #glyph-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .content { position: relative; z-index: 3; }
   section.beat {
     min-height: 100svh;
     display: flex;
@@ -56,7 +64,7 @@
     justify-content: center;
     padding: 4rem 1.25rem;
   }
-  /* v15: removed frosted "座布団" plate — text-shadow only for readability */
+  /* Fallback / reduced-motion text — no plate, no sliding band */
   .lines {
     max-width: 36rem;
     font-family: "Noto Serif JP", serif;
@@ -76,11 +84,13 @@
     font-size: 1.12em;
     font-weight: 500;
   }
-  .lines p .ch {
-    display: inline-block;
-    will-change: transform, opacity, filter;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+  body.particles-ready .beat .lines {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #glyph-canvas { display: none; }
+    body.particles-ready .beat .lines { visibility: visible; }
   }
   .cta {
     min-height: 100svh;
@@ -220,168 +230,6 @@
       </div>
     </section>
   </div>
-<script>
-(function () {
-  var bgs = [null,
-    document.getElementById("bg1"),
-    document.getElementById("bg2"),
-    document.getElementById("bg3"),
-    document.getElementById("bg4"),
-    document.getElementById("bg5"),
-    document.getElementById("bg6")
-  ];
-
-  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
-  function ease(t) { return t * t * (3 - 2 * t); }
-  // v15: assembleAmount drives particle convergence only — NOT line block motion
-  // Direction: particles gather when arriving from BELOW, scatter when leaving UPWARD
-  // Hold zone widened 0.22–0.70 for comfortable reading
-  function assembleAmount(n) {
-    // n = line midpoint / viewport height (0=top, 1=bottom)
-    // Scroll up: line rises (n decreases). Scroll down: line descends (n increases).
-    // below viewport (n>0.90): fully scattered, particles waiting below
-    // converge zone (0.70→0.90): particles gather INTO letters as line enters view
-    // hold (0.22→0.70): fully assembled, readable text
-    // dissolve zone (0.06→0.22): letters break INTO particles rising out
-    // above viewport (n<0.06): fully scattered, particles dissipated upward
-    if (n > 0.90) return 0;
-    if (n > 0.70) return ease(1 - (n - 0.70) / 0.20);
-    if (n >= 0.22) return 1;
-    if (n > 0.06) return ease((n - 0.06) / 0.16);
-    return 0;
-  }
-
-  var lines = [];
-  document.querySelectorAll(".lines p").forEach(function (p) {
-    var nodes = [];
-    var charIndex = 0;
-    function walk(node, emWrap) {
-      if (node.nodeType === 3) {
-        var txt = node.textContent;
-        for (var i = 0; i < txt.length; i++) {
-          nodes.push({ type: "char", char: txt.charAt(i), idx: charIndex++, em: emWrap });
-        }
-      } else if (node.nodeName === "BR") {
-        nodes.push({ type: "br", el: node.cloneNode(true) });
-      } else if (node.nodeName === "SPAN" && node.classList.contains("em")) {
-        node.childNodes.forEach(function (child) { walk(child, true); });
-      } else {
-        node.childNodes.forEach(function (child) { walk(child, emWrap); });
-      }
-    }
-    p.childNodes.forEach(function (node) { walk(node, false); });
-    p.textContent = "";
-    var chars = [];
-    var currentEmSpan = null;
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i];
-      if (n.type === "br") {
-        currentEmSpan = null;
-        p.appendChild(n.el);
-      } else {
-        var span = document.createElement("span");
-        span.className = "ch";
-        span.textContent = n.char === " " ? "\u00A0" : n.char;
-        // v15: richer particles — finer scatter, gather from below, dissolve upward
-        // Direction: arrival=particles scatter below gathering up; exit=letters break upward
-        var incoming = {
-          x: (Math.random() - 0.5) * 220,
-          y: 110 + Math.random() * 180,
-          r: (Math.random() - 0.5) * 70,
-          s: 0.06 + Math.random() * 0.22
-        };
-        var outgoing = {
-          x: (Math.random() - 0.5) * 240,
-          y: -(120 + Math.random() * 190),
-          r: (Math.random() - 0.5) * 80,
-          s: 0.04 + Math.random() * 0.20
-        };
-        if (n.em) {
-          if (!currentEmSpan) {
-            currentEmSpan = document.createElement("span");
-            currentEmSpan.className = "em";
-            p.appendChild(currentEmSpan);
-          }
-          currentEmSpan.appendChild(span);
-        } else {
-          currentEmSpan = null;
-          p.appendChild(span);
-        }
-        chars.push({ el: span, inn: incoming, out: outgoing });
-      }
-    }
-    lines.push({ p: p, chars: chars });
-  });
-
-  // v15: setChar applies particle transform; text block position is FIXED (no vertical slide)
-  // assembleAmount only drives char scatter↔converge, NOT section/line translation
-  function setChar(ch, from, t) {
-    var k = 1 - t;
-    var x = from.x * k;
-    var y = from.y * k;
-    var r = from.r * k;
-    var s = 1 + (from.s - 1) * k;
-    var o = 0.05 + 0.95 * t;
-    var blur = (1 - t) * 4.2; // v15: more blur when scattered for finer grain
-    ch.el.style.opacity = o.toFixed(3);
-    ch.el.style.filter = "blur(" + blur.toFixed(2) + "px)";
-    ch.el.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0) scale(" + s.toFixed(2) + ") rotate(" + r.toFixed(1) + "deg)";
-  }
-
-  function tick() {
-    var vh = window.innerHeight || 1;
-    var active = 1;
-    document.querySelectorAll("[data-scene]").forEach(function (sec) {
-      var r = sec.getBoundingClientRect();
-      if (r.top < vh * 0.55 && r.bottom > vh * 0.35) {
-        active = Number(sec.getAttribute("data-scene"));
-      }
-    });
-    for (var i = 1; i < bgs.length; i++) {
-      if (bgs[i]) {
-        var isActive = i === active;
-        bgs[i].style.opacity = isActive ? "1" : "0";
-        if (isActive && !bgs[i].classList.contains("kb-active")) {
-          bgs[i].classList.remove("kb-active");
-          void bgs[i].offsetWidth; // force reflow to restart animation
-          bgs[i].classList.add("kb-active");
-        } else if (!isActive) {
-          bgs[i].classList.remove("kb-active");
-        }
-      }
-    }
-
-    for (var L = 0; L < lines.length; L++) {
-      var line = lines[L];
-      var rec = line.p.getBoundingClientRect();
-      var n = (rec.top + rec.height * 0.5) / vh;
-      var t = assembleAmount(n);
-      var fromBelow = n > 0.5;
-      for (var c = 0; c < line.chars.length; c++) {
-        setChar(line.chars[c], fromBelow ? line.chars[c].inn : line.chars[c].out, t);
-      }
-    }
-  }
-
-  var locked = false;
-  function requestTick() {
-    if (locked) return;
-    locked = true;
-    requestAnimationFrame(function () {
-      tick();
-      locked = false;
-    });
-  }
-
-  window.addEventListener("scroll", requestTick, { passive: true });
-  window.addEventListener("touchmove", requestTick, { passive: true });
-  window.addEventListener("touchstart", requestTick, { passive: true });
-  window.addEventListener("wheel", requestTick, { passive: true });
-  window.addEventListener("resize", requestTick);
-  document.addEventListener("visibilitychange", requestTick);
-  tick();
-
-})();
-</script>
+<script src="particles.js?v=16"></script>
 </body>
 </html>
