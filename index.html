@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v20: desktop bg back to cover anchored bottom (no letterbox side bars); text anchor locked against iOS URL-bar scroll drift */
+  /* v21: desktop telops enlarged (~+29%); v20: desktop bg cover anchored bottom, text anchor locked against iOS URL-bar scroll drift */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -42,12 +42,12 @@
      bg5 (decision/夕日) ← scene-sunset.jpg (tiny van silhouette under vast sunset sky)
      bg6 (CTA) ← scene-dusk.jpg (tiny warm-lit van window in blue-hour vastness)
   */
-  #bg1 { background-image: url("scene-morning.jpg?v=20"); }
-  #bg2 { background-image: url("scene-travel.jpg?v=20"); }
-  #bg3 { background-image: url("scene-community.jpg?v=20"); }
-  #bg4 { background-image: url("scene-work.jpg?v=20"); }
-  #bg5 { background-image: url("scene-sunset.jpg?v=20"); }
-  #bg6 { background-image: url("scene-dusk.jpg?v=20"); }
+  #bg1 { background-image: url("scene-morning.jpg?v=21"); }
+  #bg2 { background-image: url("scene-travel.jpg?v=21"); }
+  #bg3 { background-image: url("scene-community.jpg?v=21"); }
+  #bg4 { background-image: url("scene-work.jpg?v=21"); }
+  #bg5 { background-image: url("scene-sunset.jpg?v=21"); }
+  #bg6 { background-image: url("scene-dusk.jpg?v=21"); }
   #glyph-canvas {
     position: fixed;
     top: 0;
@@ -158,12 +158,12 @@
        shrink + tighten so the full line fits (fallback for reduced-motion / pre-paint) */
     section[data-scene="3"] .lines { font-size: clamp(1.05rem, 5.2vw, 2rem); letter-spacing: .04em; }
   }
-  /* Desktop: wider layout, larger type, fewer breaks */
+  /* Desktop: wider layout, larger type, fewer breaks (v21: telops ~+25-30%) */
   @media (min-width: 769px) {
     br.sp { display: none; }
     .lines {
-      max-width: 52rem;
-      font-size: clamp(2rem, 2.8vw, 3rem);
+      max-width: 70rem;
+      font-size: clamp(2.5rem, 3.6vw, 3.9rem);
       letter-spacing: .12em;
       line-height: 2;
     }
@@ -171,6 +171,11 @@
        anchor to the bottom so the lower portion of the scene stays in frame
        instead of magnifying the middle of the mountain. */
     .bg { background-position: center bottom; }
+    /* v21: larger CTA heading on desktop; wider inner column so the keep-all
+       h2 line fits, while the UTAGE form and footer keep their 30rem width */
+    .cta-inner { max-width: 40rem; }
+    .cta h2 { font-size: clamp(2rem, 3.2vw, 2.6rem); }
+    .cta form, .cta footer { max-width: 30rem; margin-inline: auto; }
   }
   /* Ken Burns animation - reduced scale for less crop */
   @keyframes kenburns {
@@ -259,6 +264,6 @@
       </div>
     </section>
   </div>
-<script src="particles.js?v=20"></script>
+<script src="particles.js?v=21"></script>
 </body>
 </html>
