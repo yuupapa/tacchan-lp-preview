@@ -1,20 +1,23 @@
-/* v24: scene-2 telop lifted ~12% vh to make room for the compact intro strip below it; intro strip fade-in via IntersectionObserver (no-JS keeps it visible). v23: background activation reads every [data-scene] section (including the mid CTA), so the bg no longer falls back to the morning scene while the mid form is in view. v21: desktop telop size bumped (~+29%); v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
+/* v25: intro strip visibility is tied to beat 2 — the observer root is the lower ~40% of the viewport, so the strip fades out before the scene-3 campfire bg takes over (and back in on return), instead of staying stuck on once shown; scene-2 telop lift raised to 16% vh on phones. v24: scene-2 telop lifted ~12% vh to make room for the compact intro strip below it; intro strip fade-in via IntersectionObserver (no-JS keeps it visible). v23: background activation reads every [data-scene] section (including the mid CTA), so the bg no longer falls back to the morning scene while the mid form is in view. v21: desktop telop size bumped (~+29%); v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Intro strip reveal (v24). Armed synchronously before first paint; without
+  // Intro strip reveal (v25). Armed synchronously before first paint; without
   // JS the strip simply stays visible (no body.intro-js class is added).
+  // The observer root is shrunk to the lower ~40% of the viewport, so the
+  // strip only counts as "visible" while it sits low on screen — i.e. while
+  // beat 2 is the active scene. It fades out as it rises past ~60vh, which
+  // happens before the background switches to the scene-3 campfire (scene 2's
+  // bottom edge crossing 55vh), and fades back in when beat 2 returns.
   var introEl = document.querySelector(".intro");
   if (introEl && "IntersectionObserver" in window) {
     document.body.classList.add("intro-js");
     var introIO = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          introEl.classList.add("visible");
-          introIO.disconnect();
-        }
+        if (entry.isIntersecting) introEl.classList.add("visible");
+        else introEl.classList.remove("visible");
       });
-    }, { threshold: 0.35 });
+    }, { threshold: 0.35, rootMargin: "-60% 0px 0px 0px" });
     introIO.observe(introEl);
   }
 
@@ -115,8 +118,10 @@
         return line.some(function (run) { return /[^\s]/.test(run.text); });
       });
       // Scene 2 carries the compact intro strip in its lower area, so its
-      // telop is lifted above the viewport center to make room (v24).
-      var lift = sceneNum === 2 ? 0.12 : 0;
+      // telop is lifted above the viewport center to make room. v25: phones
+      // lift further (0.16) so the strip never crowds the telop on ~390px
+      // screens; desktop keeps the v24 lift.
+      var lift = sceneNum === 2 ? (desktop ? 0.12 : 0.16) : 0;
       messages.push({ section: sec, lines: lines, particles: [], useEm: useEm, lift: lift });
     });
     return messages;
