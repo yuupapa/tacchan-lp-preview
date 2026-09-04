@@ -13,21 +13,20 @@
 
   function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
   function ease(t) { return t * t * (3 - 2 * t); }
-  function lerp(a, b, t) { return a + (b - a) * t; }
 
   function assembleAmount(n) {
-    if (n > 0.90) return 0;
-    if (n > 0.70) return ease(1 - (n - 0.70) / 0.20);
+    if (n > 1.02) return 0;
+    if (n > 0.68) return ease(1 - (n - 0.68) / 0.34);
     if (n >= 0.22) return 1;
-    if (n > 0.06) return ease((n - 0.06) / 0.16);
+    if (n > -0.04) return ease((n + 0.04) / 0.26);
     return 0;
   }
 
   function cloudFade(n) {
-    if (n > 0.96) return 0;
-    if (n > 0.86) return ease(1 - (n - 0.86) / 0.10);
-    if (n >= 0.10) return 1;
-    if (n > 0.02) return ease((n - 0.02) / 0.08);
+    if (n > 1.12) return 0;
+    if (n > 0.88) return ease(1 - (n - 0.88) / 0.24);
+    if (n >= 0.06) return 1;
+    if (n > -0.14) return ease((n + 0.14) / 0.20);
     return 0;
   }
 
@@ -122,7 +121,68 @@
   canvas.id = "glyph-canvas";
   canvas.setAttribute("aria-hidden", "true");
   document.body.appendChild(canvas);
-  var ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
+  var ctx = canvas.getContext("2d", { alpha: true });
+
+  function makeSprite(rgb) {
+    var s = document.createElement("canvas");
+    s.width = 10;
+    s.height = 10;
+    var c = s.getContext("2d");
+    var g = c.createRadialGradient(5, 5, 0, 5, 5, 5);
+    g.addColorStop(0, "rgba(" + rgb + ",1)");
+    g.addColorStop(0.38, "rgba(" + rgb + ",0.88)");
+    g.addColorStop(1, "rgba(" + rgb + ",0)");
+    c.fillStyle = g;
+    c.fillRect(0, 0, 10, 10);
+    return s;
+  }
+  var spriteLight = makeSprite("255,248,236");
+  var spriteGold = makeSprite("255,214,160");
+  var spriteDark = makeSprite("10,8,6");
+
+  function makeParticle(hx, hy, a, em, spread) {
+    var seed = Math.random();
+    var angIn = Math.random() * Math.PI * 2;
+    var angOut = Math.random() * Math.PI * 2;
+    var radIn = 22 + Math.random() * spread * 0.34;
+    var radOut = 22 + Math.random() * spread * 0.38;
+    return {
+      hx: hx,
+      hy: hy,
+      a: a,
+      em: em,
+      seed: seed,
+      nx: (Math.random() - 0.5) * 16,
+      ny: (Math.random() - 0.5) * 18,
+      sxIn: hx + Math.cos(angIn) * radIn * 0.8,
+      syIn: hy + Math.abs(Math.sin(angIn)) * radIn + 18 + Math.random() * 56,
+      sxOut: hx + Math.cos(angOut) * radOut * 0.85,
+      syOut: hy - Math.abs(Math.sin(angOut)) * radOut - 18 - Math.random() * 56,
+      size: (em ? 1.55 : 1.35) + Math.random() * 0.7,
+      shade: 0.78 + Math.random() * 0.22,
+      delay: seed * 0.22
+    };
+  }
+
+  function particleXY(p, local, fromBelow, now) {
+    var k = 1 - local;
+    var farx = fromBelow ? p.sxIn : p.sxOut;
+    var fary = fromBelow ? p.syIn : p.syOut;
+    var x, y;
+    if (k < 0.42) {
+      var u = ease(k / 0.42);
+      x = p.hx + p.nx * u;
+      y = p.hy + p.ny * u;
+    } else {
+      var u2 = ease((k - 0.42) / 0.58);
+      x = p.hx + p.nx + (farx - p.hx - p.nx) * u2;
+      y = p.hy + p.ny + (fary - p.hy - p.ny) * u2;
+    }
+    var jitter = 0.45 + k * 5.5;
+    x += Math.sin(now * 0.0017 + p.seed * 11.0) * jitter;
+    y += Math.cos(now * 0.0013 + p.seed * 8.0) * jitter * 0.72;
+    return { x: x, y: y };
+  }
 
   var messages = [];
   var dpr = 1;
@@ -186,15 +246,14 @@
 
     var img = pctx.getImageData(0, 0, probe.width, probe.height);
     var data = img.data;
-    var step = 1;
     var phone = vw < 769;
-    var maxPts = phone ? 5000 : 7200;
+    var target = phone ? 6800 : 9000;
     var candidates = [];
-    for (var y = 0; y < probe.height; y += step) {
-      for (var x = 0; x < probe.width; x += step) {
+    for (var y = 0; y < probe.height; y += 1) {
+      for (var x = 0; x < probe.width; x += 1) {
         var i = (y * probe.width + x) * 4;
         var a = data[i + 3];
-        if (a > 72) {
+        if (a > 64) {
           candidates.push({
             lx: x / localDpr,
             ly: y / localDpr,
@@ -204,10 +263,14 @@
         }
       }
     }
-    if (candidates.length > maxPts) {
+    if (!candidates.length) {
+      msg.particles = [];
+      return;
+    }
+    if (candidates.length > target) {
       var kept = [];
-      var stride = candidates.length / maxPts;
-      for (var k = 0; k < maxPts; k++) kept.push(candidates[Math.floor(k * stride)]);
+      var stride = candidates.length / target;
+      for (var k = 0; k < target; k++) kept.push(candidates[Math.floor(k * stride)]);
       candidates = kept;
     }
 
@@ -217,28 +280,22 @@
     var particles = [];
     for (var p = 0; p < candidates.length; p++) {
       var c = candidates[p];
-      var seed = Math.random();
-      var angIn = Math.random() * Math.PI * 2;
-      var angOut = Math.random() * Math.PI * 2;
-      var radIn = 36 + Math.random() * spread * 0.46;
-      var radOut = 36 + Math.random() * spread * 0.50;
-      particles.push({
-        hx: ox + c.lx,
-        hy: oy + c.ly,
-        a: c.a,
-        em: c.em,
-        seed: seed,
-        sxIn: ox + c.lx + Math.cos(angIn) * radIn * 0.85,
-        syIn: oy + c.ly + Math.abs(Math.sin(angIn)) * radIn + 28 + Math.random() * 90,
-        sxOut: ox + c.lx + Math.cos(angOut) * radOut * 0.9,
-        syOut: oy + c.ly - Math.abs(Math.sin(angOut)) * radOut - 28 - Math.random() * 90,
-        size: (c.em ? 1.25 : 1.05) + Math.random() * 1.15,
-        shade: 0.72 + Math.random() * 0.28,
-        delay: seed * 0.30
-      });
+      particles.push(makeParticle(ox + c.lx, oy + c.ly, c.a, c.em, spread));
+    }
+    var extra = 0;
+    while (particles.length < target && extra < target) {
+      var src = candidates[extra % candidates.length];
+      particles.push(makeParticle(
+        ox + src.lx + (Math.random() - 0.5) * 1.15,
+        oy + src.ly + (Math.random() - 0.5) * 1.15,
+        src.a,
+        src.em,
+        spread
+      ));
+      extra++;
     }
     msg.particles = particles;
-    msg.metrics = { w: w, h: h, fs: fs };
+    msg.metrics = { w: w, h: h, fs: fs, count: particles.length };
   }
 
   function rebuild() {
@@ -284,49 +341,29 @@
       var t = assembleAmount(n);
       var fromBelow = n > 0.5;
       var pts = msg.particles;
-      var darkA = 0.20 * fade;
+      var delaySpan = 0.78;
 
-      if (t > 0.28) {
+      if (t > 0.22) {
+        ctx.globalAlpha = 0.22 * fade;
         for (var d = 0; d < pts.length; d++) {
           var dp = pts[d];
-          var ld = clamp((t - dp.delay) / 0.70, 0, 1);
-          ld = ease(ld);
-          if (ld < 0.28) continue;
-          var sx = fromBelow ? dp.sxIn : dp.sxOut;
-          var sy = fromBelow ? dp.syIn : dp.syOut;
-          var j = (1 - ld) * 9 + 0.8;
-          var x = lerp(sx, dp.hx, ld) + Math.sin(now * 0.0016 + dp.seed * 11.0) * j;
-          var y = lerp(sy, dp.hy, ld) + Math.cos(now * 0.0012 + dp.seed * 8.0) * j * 0.75;
-          var s = dp.size * (0.7 + 0.7 * ld);
-          ctx.fillStyle = "rgba(8,6,4," + (darkA * ld).toFixed(3) + ")";
-          ctx.fillRect(x - s * 0.75, y - s * 0.75, s * 2.15, s * 2.15);
+          var ld = ease(clamp((t - dp.delay) / delaySpan, 0, 1));
+          if (ld < 0.20) continue;
+          var dxy = particleXY(dp, ld, fromBelow, now);
+          var ds = dp.size * (1.15 + 0.55 * ld);
+          ctx.drawImage(spriteDark, dxy.x - ds * 0.5, dxy.y - ds * 0.5, ds * 1.35, ds * 1.35);
         }
       }
 
       for (var i = 0; i < pts.length; i++) {
         var p = pts[i];
-        var local = clamp((t - p.delay) / 0.70, 0, 1);
-        local = ease(local);
-        var psx = fromBelow ? p.sxIn : p.sxOut;
-        var psy = fromBelow ? p.syIn : p.syOut;
-        var jitter = (1 - local) * 11 + 1.05;
-        var px = lerp(psx, p.hx, local) + Math.sin(now * 0.0016 + p.seed * 11.0) * jitter;
-        var py = lerp(psy, p.hy, local) + Math.cos(now * 0.0012 + p.seed * 8.0) * jitter * 0.75;
-        var size = p.size * (0.52 + 0.62 * local);
-        var alpha = (0.40 + 0.60 * local) * p.a * p.shade * fade;
-        var r, g, b;
-        if (p.em) {
-          r = Math.floor(255 * (0.92 + 0.08 * p.shade));
-          g = Math.floor(210 + 28 * p.shade);
-          b = Math.floor(150 + 40 * p.shade);
-        } else {
-          r = Math.floor(244 + 11 * p.shade);
-          g = Math.floor(236 + 14 * p.shade);
-          b = Math.floor(220 + 18 * p.shade);
-        }
-        ctx.fillStyle = "rgba(" + r + "," + g + "," + b + "," + alpha.toFixed(3) + ")";
-        ctx.fillRect(px, py, size, size);
+        var local = ease(clamp((t - p.delay) / delaySpan, 0, 1));
+        var xy = particleXY(p, local, fromBelow, now);
+        var size = p.size * (0.72 + 0.55 * local);
+        ctx.globalAlpha = (0.38 + 0.62 * local) * p.a * p.shade * fade;
+        ctx.drawImage(p.em ? spriteGold : spriteLight, xy.x - size * 0.5, xy.y - size * 0.5, size, size);
       }
+      ctx.globalAlpha = 1;
     }
 
     var cta = document.querySelector("section.cta");
