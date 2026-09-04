@@ -107,8 +107,19 @@
   }
   .hint { color: rgba(255,255,255,.55); font-size: .75rem; margin-top: .2rem; }
   footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.3); font-size: .75rem; letter-spacing: .12em; }
+  /* Mobile (default): compact short lines */
   @media (max-width: 768px) {
     .lines { letter-spacing: .07em; line-height: 2; font-size: clamp(1.55rem, 6.4vw, 2.15rem); }
+  }
+  /* Desktop: wider layout, larger type, fewer breaks */
+  @media (min-width: 769px) {
+    br.sp { display: none; }
+    .lines {
+      max-width: 52rem;
+      font-size: clamp(2rem, 2.8vw, 3rem);
+      letter-spacing: .12em;
+      line-height: 2;
+    }
   }
   /* Ken Burns animation */
   @keyframes kenburns {
@@ -148,41 +159,32 @@
   <div class="content">
     <section class="beat" data-scene="1">
       <div class="lines">
-        <p>場所に縛られない</p>
-        <p>今日いる場所で終わる</p>
-        <p>明日はどこでもいい</p>
-        <p>必要なものは少ない</p>
+        <p>場所に縛られない<br class="sp">今日いる場所で終わる</p>
+        <p>明日はどこでもいい<br class="sp">必要なものは少ない</p>
       </div>
     </section>
     <section class="beat" data-scene="2">
       <div class="lines">
-        <p>先に変えたのは収入じゃない</p>
-        <p>環境だ</p>
-        <p>動けないままだった</p>
-        <p>だから先に暮らしを変えた</p>
+        <p>先に変えたのは収入じゃない<br class="sp">環境だ</p>
+        <p>動けないままだった<br class="sp">だから先に暮らしを変えた</p>
       </div>
     </section>
     <section class="beat" data-scene="3">
       <div class="lines">
-        <p>待っていても始まらない</p>
-        <p>やる気はあとから来る</p>
-        <p>先に状態をつくる</p>
-        <p>逃げられない場所に立つ</p>
+        <p>待っていても始まらない<br class="sp">やる気はあとから来る</p>
+        <p>先に状態をつくる<br class="sp">逃げられない場所に立つ</p>
       </div>
     </section>
     <section class="beat" data-scene="4">
       <div class="lines">
-        <p>旅と仕事が同時にある</p>
-        <p>遊んでばかりではない</p>
-        <p>顔を見せなくてもいい</p>
-        <p>収入はあとからついてきた</p>
+        <p>旅と仕事が同時にある<br class="sp">遊んでばかりではない</p>
+        <p>顔を見せなくてもいい<br class="sp">収入はあとからついてきた</p>
       </div>
     </section>
     <section class="beat" data-scene="5">
       <div class="lines">
         <p>やっていることはふたつ</p>
-        <p>やらないといけない状態にする</p>
-        <p>自分の環境を先に変える</p>
+        <p>やらないといけない状態にする<br class="sp">自分の環境を先に変える</p>
       </div>
     </section>
     <section class="cta" data-scene="6">
@@ -225,27 +227,43 @@
 
   var lines = [];
   document.querySelectorAll(".lines p").forEach(function (p) {
-    var text = p.textContent;
+    var nodes = [];
+    var charIndex = 0;
+    p.childNodes.forEach(function (node) {
+      if (node.nodeType === 3) {
+        var txt = node.textContent;
+        for (var i = 0; i < txt.length; i++) {
+          nodes.push({ type: "char", char: txt.charAt(i), idx: charIndex++ });
+        }
+      } else if (node.nodeName === "BR") {
+        nodes.push({ type: "br", el: node.cloneNode(true) });
+      }
+    });
     p.textContent = "";
     var chars = [];
-    for (var i = 0; i < text.length; i++) {
-      var span = document.createElement("span");
-      span.className = "ch";
-      span.textContent = text.charAt(i) === " " ? "\u00A0" : text.charAt(i);
-      var incoming = {
-        x: (Math.random() - 0.5) * 160,
-        y: 90 + Math.random() * 140,
-        r: (Math.random() - 0.5) * 50,
-        s: 0.12 + Math.random() * 0.28
-      };
-      var outgoing = {
-        x: (Math.random() - 0.5) * 180,
-        y: -(90 + Math.random() * 150),
-        r: (Math.random() - 0.5) * 60,
-        s: 0.1 + Math.random() * 0.28
-      };
-      p.appendChild(span);
-      chars.push({ el: span, inn: incoming, out: outgoing });
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      if (n.type === "br") {
+        p.appendChild(n.el);
+      } else {
+        var span = document.createElement("span");
+        span.className = "ch";
+        span.textContent = n.char === " " ? "\u00A0" : n.char;
+        var incoming = {
+          x: (Math.random() - 0.5) * 160,
+          y: 90 + Math.random() * 140,
+          r: (Math.random() - 0.5) * 50,
+          s: 0.12 + Math.random() * 0.28
+        };
+        var outgoing = {
+          x: (Math.random() - 0.5) * 180,
+          y: -(90 + Math.random() * 150),
+          r: (Math.random() - 0.5) * 60,
+          s: 0.1 + Math.random() * 0.28
+        };
+        p.appendChild(span);
+        chars.push({ el: span, inn: incoming, out: outgoing });
+      }
     }
     lines.push({ p: p, chars: chars });
   });
