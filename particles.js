@@ -1,6 +1,22 @@
-/* v23: background activation reads every [data-scene] section (including the mid CTA), so the bg no longer falls back to the morning scene while the mid form is in view. v21: desktop telop size bumped (~+29%); v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
+/* v24: scene-2 telop lifted ~12% vh to make room for the compact intro strip below it; intro strip fade-in via IntersectionObserver (no-JS keeps it visible). v23: background activation reads every [data-scene] section (including the mid CTA), so the bg no longer falls back to the morning scene while the mid form is in view. v21: desktop telop size bumped (~+29%); v20: luminous light-mote particles + solid text crossfade; fit-to-width shrink so long lines never clip; text anchor locked to a stable viewport center (no rebuild/jump when the iOS URL bar shows/hides on scroll) */
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Intro strip reveal (v24). Armed synchronously before first paint; without
+  // JS the strip simply stays visible (no body.intro-js class is added).
+  var introEl = document.querySelector(".intro");
+  if (introEl && "IntersectionObserver" in window) {
+    document.body.classList.add("intro-js");
+    var introIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          introEl.classList.add("visible");
+          introIO.disconnect();
+        }
+      });
+    }, { threshold: 0.35 });
+    introIO.observe(introEl);
+  }
 
   var bgs = [null,
     document.getElementById("bg1"),
@@ -98,7 +114,10 @@
       lines = lines.filter(function (line) {
         return line.some(function (run) { return /[^\s]/.test(run.text); });
       });
-      messages.push({ section: sec, lines: lines, particles: [], useEm: useEm });
+      // Scene 2 carries the compact intro strip in its lower area, so its
+      // telop is lifted above the viewport center to make room (v24).
+      var lift = sceneNum === 2 ? 0.12 : 0;
+      messages.push({ section: sec, lines: lines, particles: [], useEm: useEm, lift: lift });
     });
     return messages;
   }
@@ -321,7 +340,7 @@
     }
 
     var ox = (vw - w) / 2;
-    var oy = (vh - h) / 2;
+    var oy = (vh - h) / 2 - (msg.lift ? vh * msg.lift : 0);
     var spread = Math.min(vw, vh);
     var particles = [];
     for (var p = 0; p < candidates.length; p++) {
