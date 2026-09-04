@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  /* v25: design review fixes — intro strip is tied to beat 2 (fades out before the scene-3 campfire bg takes over, back in on return) instead of staying stuck on; scene-2 telop raised further on phones (lift 0.16) and the intro strip slightly shrunk/lowered so they don't collide at ~390px. v24: mid label 「ここから。」; both form buttons 「無料動画セミナーを今すぐ受け取る」 with play icon, thicker; final receive block (期間限定 / 無料動画セミナーを／今すぐ受け取る / 登録後すぐに案内が届きます) before the form; compact face-less intro strip under the raised scene-2 telop. v23: mid CTA is a full UTAGE email form carrying data-scene="3"; scene 3/4 stills regenerated; title trimmed to 期間限定. v22: locked copy; wide-FOV film stills. v21: desktop telops enlarged (~+29%). v20: desktop bg cover anchored bottom; text anchor locked against iOS URL-bar scroll drift */
+  /* v26: the たっちゃん intro text and the mid-CTA label 「ここから。」 render as canvas glyph particles with the same gather → hold → dissolve motion as the telops (particles.js); the intro photo soft-fades in sync and the mid form settles scroll-linked while staying clickable. v25: design review fixes — intro strip is tied to beat 2 (fades out before the scene-3 campfire bg takes over, back in on return); scene-2 telop raised further on phones (lift 0.16) and the intro strip slightly shrunk/lowered so they don't collide at ~390px. v24: mid label 「ここから。」; both form buttons with play icon; final receive block before the form; compact intro strip under the raised scene-2 telop. v23: mid CTA is a full UTAGE email form carrying data-scene="3"; scene 3/4 stills regenerated. v22: locked copy; wide-FOV film stills. v21: desktop telops enlarged (~+29%). v20: desktop bg cover anchored bottom; text anchor locked against iOS URL-bar scroll drift */
   :root { --accent: #d4a574; --accent-light: #e8c39a; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #0a0a0a; color: #fff; }
@@ -45,12 +45,12 @@
      bg5 (decision/夕日) ← scene-sunset.jpg (bottom-weighted sunset sky, tiny van silhouette)
      bg6 (CTA) ← scene-dusk.jpg (dark blue-hour calm, tiny warm van window light)
   */
-  #bg1 { background-image: url("scene-morning.jpg?v=25"); }
-  #bg2 { background-image: url("scene-travel.jpg?v=25"); }
-  #bg3 { background-image: url("scene-community.jpg?v=25"); }
-  #bg4 { background-image: url("scene-work.jpg?v=25"); }
-  #bg5 { background-image: url("scene-sunset.jpg?v=25"); }
-  #bg6 { background-image: url("scene-dusk.jpg?v=25"); }
+  #bg1 { background-image: url("scene-morning.jpg?v=26"); }
+  #bg2 { background-image: url("scene-travel.jpg?v=26"); }
+  #bg3 { background-image: url("scene-community.jpg?v=26"); }
+  #bg4 { background-image: url("scene-work.jpg?v=26"); }
+  #bg5 { background-image: url("scene-sunset.jpg?v=26"); }
+  #bg6 { background-image: url("scene-dusk.jpg?v=26"); }
   #glyph-canvas {
     position: fixed;
     top: 0;
@@ -102,9 +102,25 @@
     visibility: hidden;
     pointer-events: none;
   }
+  /* v26: intro text + mid-CTA label render as canvas glyph particles (same
+     gather/dissolve as the telops). The body classes are per block, so a block
+     that failed to sample keeps its DOM text as fallback. visibility (not
+     display) keeps the layout the particles were measured against. */
+  body.particles-intro .intro-text { visibility: hidden; }
+  body.particles-mid .mid-cta-label { visibility: hidden; }
+  /* In particle mode the draw loop drives the intro photo opacity per frame,
+     so the strip's IntersectionObserver fade-in must not fight it. */
+  body.particles-intro.intro-js .intro,
+  body.particles-intro.intro-js .intro.visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    transition: none;
+  }
   @media (prefers-reduced-motion: reduce) {
     #glyph-canvas { display: none; }
     body.particles-ready .beat .lines { visibility: visible; }
+    body.particles-intro .intro-text { visibility: visible; }
+    body.particles-mid .mid-cta-label { visibility: visible; }
   }
   .cta {
     min-height: 100svh;
@@ -305,7 +321,7 @@
         <p><span class="em">好きな場所</span>で、<br class="sp">生きていく。</p>
       </div>
       <div class="intro">
-        <img class="intro-photo" src="intro-tacchan.jpg?v=25" alt="キャンピングカーの中でパソコンに向かう、たっちゃんの後ろ姿" loading="lazy" decoding="async">
+        <img class="intro-photo" src="intro-tacchan.jpg?v=26" alt="キャンピングカーの中でパソコンに向かう、たっちゃんの後ろ姿" loading="lazy" decoding="async">
         <div class="intro-text">
           <p class="intro-name">たっちゃん。</p>
           <p>キャンピングカーで日本中を旅しながら<br>パソコン1台で仕事している。</p>
@@ -360,6 +376,6 @@
       </div>
     </section>
   </div>
-<script src="particles.js?v=25"></script>
+<script src="particles.js?v=26"></script>
 </body>
 </html>
