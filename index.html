@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>場所に縛られない働き方の作り方｜無料で「環境を先に変える」手順を期間限定プレゼント！</title>
-<meta name="description" content="環境を先に変える手順（期間限定）">
+<title>場所に縛られない働き方｜無料セミナー</title>
+<meta name="description" content="自由な暮らしを始めるために、最初に整えるべき環境と具体的なステップを無料セミナーでお伝えします。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&display=swap" rel="stylesheet">
@@ -33,11 +33,19 @@
     background: linear-gradient(180deg, rgba(8,8,10,.06) 0%, rgba(8,8,10,.12) 30%, transparent 50%),
                 linear-gradient(to top, rgba(8,8,10,.55) 0%, rgba(8,8,10,.22) 40%, transparent 70%);
   }
-  #bg1 { background-image: url("scene-1.jpg"); }
+  /* Background mapping (v13):
+     bg1 (morning wake) ← scene-5.jpg (dawn coffee)
+     bg2 (travel/freedom) ← scene-2.jpg (coastal road)
+     bg3 (community) ← scene-3.jpg (van interior mountain) — NEEDS REPLACE with group/camp photo
+     bg4 (work+life) ← scene-4.jpg (laptop/work)
+     bg5 (decision/sunset) ← scene-1.jpg
+     bg6 (CTA) ← scene-6.jpg (dusk/calm)
+  */
+  #bg1 { background-image: url("scene-5.jpg"); }
   #bg2 { background-image: url("scene-2.jpg"); }
   #bg3 { background-image: url("scene-3.jpg"); }
   #bg4 { background-image: url("scene-4.jpg"); }
-  #bg5 { background-image: url("scene-5.jpg"); }
+  #bg5 { background-image: url("scene-1.jpg"); }
   #bg6 { background-image: url("scene-6.jpg"); }
   .content { position: relative; z-index: 1; }
   section.beat {
@@ -63,6 +71,10 @@
     border-radius: 0.625rem;
   }
   .lines p { margin: 0.2em 0; }
+  .lines .em {
+    font-size: 1.12em;
+    font-weight: 500;
+  }
   .lines p .ch {
     display: inline-block;
     will-change: transform, opacity, filter;
@@ -107,6 +119,9 @@
   }
   .hint { color: rgba(255,255,255,.55); font-size: .75rem; margin-top: .2rem; }
   footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.3); font-size: .75rem; letter-spacing: .12em; }
+  footer .legal-links { margin-top: 1rem; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+  footer .legal-links a { color: rgba(255,255,255,.35); text-decoration: none; transition: color .2s; }
+  footer .legal-links a:hover { color: rgba(255,255,255,.55); }
   /* Mobile (default): compact short lines */
   @media (max-width: 768px) {
     .lines { letter-spacing: .07em; line-height: 2; font-size: clamp(1.55rem, 6.4vw, 2.15rem); }
@@ -159,46 +174,48 @@
   <div class="content">
     <section class="beat" data-scene="1">
       <div class="lines">
-        <p>場所に縛られない<br class="sp">今日いる場所で終わる</p>
-        <p>明日はどこでもいい<br class="sp">必要なものは少ない</p>
+        <p>明日、あなたが目覚める場所は、<br><span class="em">どこですか。</span></p>
       </div>
     </section>
     <section class="beat" data-scene="2">
       <div class="lines">
-        <p>先に変えたのは収入じゃない<br class="sp">環境だ</p>
-        <p>動けないままだった<br class="sp">だから先に暮らしを変えた</p>
+        <p><span class="em">好きな場所</span>で、<br class="sp">生きていく。</p>
       </div>
     </section>
+    <!-- NOTE: Scene 3 NEEDS REPLACE - current assets lack real community/camp group photo -->
     <section class="beat" data-scene="3">
       <div class="lines">
-        <p>待っていても始まらない<br class="sp">やる気はあとから来る</p>
-        <p>先に状態をつくる<br class="sp">逃げられない場所に立つ</p>
+        <p>自由は、<br><span class="em">ひとりでつくるものじゃない。</span></p>
       </div>
     </section>
     <section class="beat" data-scene="4">
       <div class="lines">
-        <p>旅と仕事が同時にある<br class="sp">遊んでばかりではない</p>
-        <p>顔を見せなくてもいい<br class="sp">収入はあとからついてきた</p>
+        <p>暮らしも、仕事も。<br><span class="em">どちらも諦めない。</span></p>
       </div>
     </section>
     <section class="beat" data-scene="5">
       <div class="lines">
-        <p>やっていることはふたつ</p>
-        <p>やらないといけない状態にする<br class="sp">自分の環境を先に変える</p>
+        <p>いつかじゃない。<br><span class="em">今日、変わろう。</span></p>
       </div>
     </section>
     <section class="cta" data-scene="6">
       <div class="cta-inner">
-        <p class="eyebrow">期間限定</p>
-        <h2>環境を先に変える手順</h2>
-        <p class="lead">場所に縛られない働き方を始めるための<br>具体的なステップを無料でお届けします</p>
+        <p class="eyebrow">期間限定・無料セミナー</p>
+        <h2>場所に縛られない働き方を、<br class="sp">ここから。</h2>
+        <p class="lead">自由な暮らしを始めるために、<br class="sp">最初に整えるべき環境と具体的なステップを、<br class="sp">無料セミナーでお伝えします。</p>
         <form id="form" action="https://utage-system.com/r/nLIjbJDSiDdp/store" method="post">
           <input type="hidden" name="redirect_url" value="https://utage-system.com/p/ithxISVdorRw">
           <input type="email" name="mail" id="mail" placeholder="メールアドレスを入力" required autocomplete="email">
-          <button type="submit">今すぐ無料で手に入れる</button>
+          <button type="submit">今すぐ無料で参加する</button>
           <p class="hint">※ いつでも配信解除できます</p>
         </form>
-        <footer>© たっちゃん</footer>
+        <footer>
+          <p>© たっちゃん</p>
+          <p class="legal-links">
+            <a href="https://utage-system.com/p/sS8VCPahF2dn" target="_blank" rel="noopener">特定商取引法に基づく表記</a>
+            <a href="https://utage-system.com/p/XPsf4gULrYMs" target="_blank" rel="noopener">プライバシーポリシー</a>
+          </p>
+        </footer>
       </div>
     </section>
   </div>
@@ -229,21 +246,28 @@
   document.querySelectorAll(".lines p").forEach(function (p) {
     var nodes = [];
     var charIndex = 0;
-    p.childNodes.forEach(function (node) {
+    function walk(node, emWrap) {
       if (node.nodeType === 3) {
         var txt = node.textContent;
         for (var i = 0; i < txt.length; i++) {
-          nodes.push({ type: "char", char: txt.charAt(i), idx: charIndex++ });
+          nodes.push({ type: "char", char: txt.charAt(i), idx: charIndex++, em: emWrap });
         }
       } else if (node.nodeName === "BR") {
         nodes.push({ type: "br", el: node.cloneNode(true) });
+      } else if (node.nodeName === "SPAN" && node.classList.contains("em")) {
+        node.childNodes.forEach(function (child) { walk(child, true); });
+      } else {
+        node.childNodes.forEach(function (child) { walk(child, emWrap); });
       }
-    });
+    }
+    p.childNodes.forEach(function (node) { walk(node, false); });
     p.textContent = "";
     var chars = [];
+    var currentEmSpan = null;
     for (var i = 0; i < nodes.length; i++) {
       var n = nodes[i];
       if (n.type === "br") {
+        currentEmSpan = null;
         p.appendChild(n.el);
       } else {
         var span = document.createElement("span");
@@ -261,7 +285,17 @@
           r: (Math.random() - 0.5) * 60,
           s: 0.1 + Math.random() * 0.28
         };
-        p.appendChild(span);
+        if (n.em) {
+          if (!currentEmSpan) {
+            currentEmSpan = document.createElement("span");
+            currentEmSpan.className = "em";
+            p.appendChild(currentEmSpan);
+          }
+          currentEmSpan.appendChild(span);
+        } else {
+          currentEmSpan = null;
+          p.appendChild(span);
+        }
         chars.push({ el: span, inn: incoming, out: outgoing });
       }
     }
